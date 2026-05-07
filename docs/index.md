@@ -1,6 +1,6 @@
 # FusionCore
 
-**ROS 2 UKF sensor fusion. IMU + wheel encoders + GPS → one position estimate. No manual noise tuning. Apache 2.0.**
+**ROS 2 UKF sensor fusion. IMU + wheel encoders + GPS + GPS velocity + radar Doppler → one position estimate. No manual noise tuning. Apache 2.0.**
 
 [![CI](https://github.com/manankharwar/fusioncore/actions/workflows/ci.yml/badge.svg)](https://github.com/manankharwar/fusioncore/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19834991.svg)](https://doi.org/10.5281/zenodo.19834991)
@@ -9,11 +9,11 @@
 
 ## What it does
 
-FusionCore is a 22-state UKF that fuses IMU, wheel encoders, and GPS into a single clean odometry output at 100 Hz. It runs as a single ROS 2 lifecycle node: no `navsat_transform`, no coordinate projection node, no feedback loop between two filters.
+FusionCore is a 22-state UKF that fuses IMU, wheel encoders, GPS position, GPS velocity, and radar Doppler ego-velocity into a single clean odometry output at 100 Hz. It runs as a single ROS 2 lifecycle node: no `navsat_transform`, no coordinate projection node, no feedback loop between two filters.
 
 It publishes `/fusion/odom` and the full `odom → base_link` TF. Nav2 consumes it directly.
 
-GPS is optional. FusionCore runs fine on IMU + wheel odometry alone for indoor robots.
+GPS is optional. FusionCore runs fine on IMU + wheel odometry alone for indoor robots. GPS velocity and radar velocity are each independently optional: enable whichever sensors you have.
 
 ---
 
@@ -32,6 +32,8 @@ robot_localization is a solid, well-maintained package used on tens of thousands
 | GPS fix quality gating | Not built-in | HDOP, satellite count, fix type |
 | Dual antenna heading | Not built-in | Yes |
 | Inertial coast mode | Not built-in | Auto on sustained GPS dropout |
+| GPS velocity fusion (wheel slip detection) | Not built-in | Yes -- Doppler vs wheel innovation reveals slip |
+| Radar Doppler velocity fusion | Not built-in | Yes -- works indoors, all weather, slip detection |
 | ROS 2 Jazzy / Humble | Ported from ROS 1 | Native, from scratch |
 
 ---

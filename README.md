@@ -5,7 +5,7 @@
 [![Docs](https://img.shields.io/badge/docs-manankharwar.github.io%2Ffusioncore-blue)](https://manankharwar.github.io/fusioncore/)
 [![Paper](https://img.shields.io/badge/paper-arXiv%20preprint-b31b1b)](paper/fusioncore_arxiv.pdf)
 
-**ROS 2 sensor fusion: IMU + wheel encoders + GPS fused via UKF at 100 Hz. 22-state filter with IMU bias estimation, adaptive noise covariance, and chi-squared outlier rejection on every sensor.**
+**ROS 2 sensor fusion: IMU + wheel encoders + GPS fused via UKF at 100 Hz. 22-state filter with IMU bias estimation, adaptive noise covariance, chi-squared outlier rejection on every sensor, GPS velocity fusion for wheel slip detection, and radar Doppler ego-velocity fusion.**
 
 <p align="center">
   <img width="900" height="500" alt="LinkedIn1-ezgif com-optimize" src="https://github.com/user-attachments/assets/e1e07cfb-74e0-48b9-9bfd-32b68ee5a6ef"/>
@@ -16,7 +16,9 @@
 
 I needed sensor fusion for a mobile robot project and reached for `robot_localization` like everyone does. It works well. But I wanted a filter that estimated IMU gyro and accelerometer bias as part of the state vector, adapted its noise covariance from real sensor behavior rather than config values, and rejected outliers on every sensor update: not just GPS.
 
-So I built FusionCore. It's a 22-state UKF that fuses IMU, wheel encoders, and GPS natively. Gyro and accelerometer bias are estimated continuously as filter states. Noise covariance adapts from the innovation sequence automatically. Every sensor update: IMU, wheel odometry, GPS: goes through a chi-squared gate before it touches the filter. GPS is handled in ECEF directly, no coordinate projection.
+So I built FusionCore. It's a 22-state UKF that fuses IMU, wheel encoders, GPS position, GPS velocity, and radar Doppler ego-velocity natively. Gyro and accelerometer bias are estimated continuously as filter states. Noise covariance adapts from the innovation sequence automatically. Every sensor update goes through a chi-squared gate before it touches the filter. GPS is handled in ECEF directly, no coordinate projection.
+
+GPS velocity fusion (from any receiver that publishes Doppler velocity, like the u-blox F9P) compares GPS-reported speed against wheel-reported speed on every filter cycle. The innovation directly reveals wheel slip -- the Kalman gain automatically down-weights a slipping wheel in proportion to how much it disagrees with GPS. Radar Doppler velocity fusion works the same way but using radio wave physics instead of satellites: it functions indoors, in rain, fog, dust, and complete darkness.
 
 <p align="center">
   <img src="figures/fig2_traj_grid.png" alt="Trajectory overlay: all 6 sequences, SE3-aligned to RTK GPS ground truth" width="650">
