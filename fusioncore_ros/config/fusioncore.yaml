@@ -43,6 +43,16 @@ fusioncore:
     # Set to your IMU frame if the driver publishes with an empty frame_id.
     imu.frame_id: "base_link"
 
+    # Optional second IMU source. When non-empty, FusionCore subscribes and
+    # calls update_imu() for each message, treating both sensors as independent
+    # measurements of the same state. Useful on platforms with two IMUs
+    # (e.g. VESC IMU + RealSense D435i) when you want redundancy without
+    # pre-merging them externally. Uses the same noise model as the primary IMU.
+    # Leave empty to disable.
+    imu2.topic: ""
+    imu2.frame_id: ""
+    imu2.remove_gravitational_acceleration: false
+
     encoder.vel_noise: 0.05
     encoder.yaw_noise: 0.02
 

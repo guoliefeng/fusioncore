@@ -90,15 +90,24 @@ No. FusionCore checks the covariance in every incoming odometry message. If it's
 
 ## Which IMU to use if you have two
 
-FusionCore fuses one IMU per instance. If your platform has multiple (for example, both a VESC built-in IMU and a RealSense D435i), pick the better one and remap to it.
+You can fuse both. Set `imu2.topic` in your config to the second IMU topic and FusionCore will treat them as independent measurements of the same state:
 
-For most F1/10 setups: use the **RealSense D435i IMU**. It has a lower noise floor than the IMU in most VESC-based motor controllers, and its axes are more stable during the high angular rate turns that F1/10 racing involves.
-
-```bash
--r /imu/data:=/camera/imu   # use D435i, not VESC
+```yaml
+imu2.topic: "/vesc/imu"
+imu2.frame_id: ""                            # or override if driver uses a non-standard frame
+imu2.remove_gravitational_acceleration: false
 ```
 
-If you genuinely need both IMUs fused, run them through `imu_filter_madgwick` or `imu_tools/imu_complementary_filter` first to merge them into a single topic, then feed that to FusionCore.
+Both IMUs must be in (or TF-transformable to) `base_link`.
+
+For most F1/10 setups the **RealSense D435i IMU** is the better primary (`/imu/data`). It has a lower noise floor than most VESC motor controllers and handles the high angular rates of racing turns well. The VESC IMU then becomes the secondary (`imu2.topic`).
+
+```bash
+-r /imu/data:=/camera/imu   # D435i as primary
+# then in config: imu2.topic: "/vesc/imu"
+```
+
+If you only want one IMU, just leave `imu2.topic: ""` and remap `/imu/data` to whichever sensor you prefer.
 
 ---
 

@@ -40,6 +40,16 @@ fusioncore:
                       # non-standard frame name (e.g. Gazebo Harmonic TurtleBot3 publishes
                       # "waffle/imu_link/tb3_imu"). Set to your URDF frame name instead.
 
+    # Optional second IMU. When non-empty, FusionCore subscribes to this topic
+    # and fuses each message as an independent measurement of the same state.
+    # Both IMUs must be in (or TF-transformable to) base_link frame.
+    # The second IMU uses the same noise model as the primary.
+    # Useful when your platform has two IMUs and you want redundancy without
+    # pre-merging them with imu_filter_madgwick or similar. Leave empty to disable.
+    imu2.topic: ""
+    imu2.frame_id: ""
+    imu2.remove_gravitational_acceleration: false
+
     # ── Wheel encoders ────────────────────────────────────────────────────────
     encoder.vel_noise: 0.05     # m/s
     encoder.yaw_noise: 0.02     # rad/s

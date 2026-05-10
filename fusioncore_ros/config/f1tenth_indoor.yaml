@@ -26,9 +26,11 @@
 #   Uncomment encoder2.topic below.
 #
 # ── Multiple IMUs ────────────────────────────────────────────────────────────
-# FusionCore fuses one IMU. Use the RealSense D435i: it has lower noise than
+# If you only want one IMU: use the RealSense D435i. It has lower noise than
 # the VESC's onboard IMU. Remap /imu/data at launch.
-# If you need both, run imu_filter_madgwick or imu_tools to merge them first.
+# If you want to fuse both: set imu2.topic below to your second IMU topic.
+# FusionCore will treat them as independent measurements of the same state.
+# Both must be in (or transformable to) base_link frame.
 #
 # ── SLAM integration ─────────────────────────────────────────────────────────
 # FusionCore publishes odom -> base_link. Your SLAM stack publishes map -> odom.
@@ -51,6 +53,13 @@ fusioncore:
     imu.accel_noise: 0.05              # m/s²
     imu.remove_gravitational_acceleration: false
     imu.frame_id: "camera_imu_optical_frame"
+
+    # ── Second IMU (optional: VESC built-in IMU) ────────────────────────────
+    # Uncomment to fuse both the D435i and VESC IMU as independent measurements.
+    # imu2.topic: "/vesc/imu"
+    imu2.topic: ""
+    imu2.frame_id: ""
+    imu2.remove_gravitational_acceleration: false
 
     # ── Primary odometry (VESC wheel encoder) ────────────────────────────────
     # FusionCore auto-detects zero covariance from VESC and falls back to these

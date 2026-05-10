@@ -83,6 +83,16 @@ public:
     // already subtracted gravity, enable this to add gravity back before fusing.
     declare_parameter("imu.remove_gravitational_acceleration", false);
 
+    // Optional second IMU source. When non-empty, FusionCore subscribes to this
+    // topic and calls update_imu() for each message, treating the two sensors as
+    // independent measurements of the same state. Uses the same noise model as
+    // the primary IMU. Useful when your platform has two IMUs and you want
+    // redundancy rather than pre-merging them externally (e.g. VESC IMU + D435i).
+    // Leave empty to disable.
+    declare_parameter("imu2.topic",    std::string(""));
+    declare_parameter("imu2.frame_id", std::string(""));
+    declare_parameter("imu2.remove_gravitational_acceleration", false);
+
     declare_parameter("encoder.vel_noise", 0.05);
     declare_parameter("encoder.yaw_noise", 0.02);
 
@@ -244,6 +254,10 @@ public:
       imu_remove_gravity_ ? "ENABLED" : "disabled");
     if (!imu_frame_override_.empty())
       RCLCPP_INFO(get_logger(), "IMU frame override: %s", imu_frame_override_.c_str());
+
+    imu2_topic_          = get_parameter("imu2.topic").as_string();
+    imu2_frame_override_ = get_parameter("imu2.frame_id").as_string();
+    imu2_remove_gravity_ = get_parameter("imu2.remove_gravitational_acceleration").as_bool();
 
     config.encoder.vel_noise_x  = get_parameter("encoder.vel_noise").as_double();
     config.encoder.vel_noise_y  = config.encoder.vel_noise_x;
@@ -410,6 +424,17 @@ public:
         std::lock_guard<std::mutex> lock(fc_mutex_);
         imu_callback(msg);
       }, sensor_opts);
+
+    if (!imu2_topic_.empty()) {
+      imu2_sub_ = create_subscription<sensor_msgs::msg::Imu>(
+        imu2_topic_, 100,
+        [this](const sensor_msgs::msg::Imu::SharedPtr msg) {
+          std::lock_guard<std::mutex> lock(fc_mutex_);
+          imu2_callback(msg);
+        }, sensor_opts);
+      RCLCPP_INFO(get_logger(),
+        "Second IMU enabled on topic: %s", imu2_topic_.c_str());
+    }
 
     encoder_sub_ = create_subscription<nav_msgs::msg::Odometry>(
       "/odom/wheels", 50,
@@ -652,6 +677,7 @@ public:
       sensors_expected_.insert("IMU");
       sensors_expected_.insert("Encoder");
       if (reference_use_first_fix_)        sensors_expected_.insert("GNSS");
+      if (!imu2_topic_.empty())            sensors_expected_.insert("IMU2");
       if (!encoder2_topic_.empty())        sensors_expected_.insert("Encoder2");
       if (!gnss_vel_topic_.empty())        sensors_expected_.insert("GPSVel");
       if (!radar_vel_topic_.empty())       sensors_expected_.insert("RadarVel");
@@ -672,6 +698,7 @@ public:
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State &)
   {
     imu_sub_.reset();
+    imu2_sub_.reset();
     encoder_sub_.reset();
     encoder2_sub_.reset();
     gnss_vel_sub_.reset();
@@ -1042,6 +1069,88 @@ private:
       w_base.x(), w_base.y(), w_base.z(),
       a_base.x(), a_base.y(), a_base.z());
     // Fix 11: pass the rotation quaternion so orientation is also transformed
+    fuse_imu_orientation_if_valid(t, msg, q);
+  }
+
+  // Second IMU callback. Mirrors imu_callback but skips filter initialization
+  // (only the primary IMU drives init). Treats the second sensor as an
+  // independent measurement of the same state; both update_imu() calls are
+  // valid because they fuse independent noise realizations.
+  void imu2_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
+  {
+    mark_sensor_received("IMU2");
+    if (!fc_->is_initialized()) return;
+
+    double t = rclcpp::Time(msg->header.stamp).seconds();
+
+    std::string imu_frame = imu2_frame_override_.empty()
+      ? (msg->header.frame_id.empty() ? "imu_link" : msg->header.frame_id)
+      : imu2_frame_override_;
+
+    if (imu_frame == base_frame_) {
+      double ax = msg->linear_acceleration.x;
+      double ay = msg->linear_acceleration.y;
+      double az = msg->linear_acceleration.z;
+      if (imu2_remove_gravity_) {
+        tf2::Vector3 g_base = gravity_in_body_frame();
+        ax += g_base.x(); ay += g_base.y(); az += g_base.z();
+      }
+      fc_->update_imu(t,
+        msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z,
+        ax, ay, az);
+      fuse_imu_orientation_if_valid(t, msg, std::nullopt);
+      return;
+    }
+
+    geometry_msgs::msg::TransformStamped tf_stamped;
+    try {
+      tf_stamped = tf_buffer_->lookupTransform(
+        base_frame_, imu_frame, tf2::TimePointZero);
+    } catch (const tf2::TransformException & ex) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
+        "Cannot transform IMU2 from %s to %s: %s"
+        " -- Fix: ros2 run tf2_ros static_transform_publisher"
+        " --frame-id %s --child-frame-id %s",
+        imu_frame.c_str(), base_frame_.c_str(), ex.what(),
+        base_frame_.c_str(), imu_frame.c_str());
+      double ax = msg->linear_acceleration.x;
+      double ay = msg->linear_acceleration.y;
+      double az = msg->linear_acceleration.z;
+      if (imu2_remove_gravity_) {
+        tf2::Vector3 g_base = gravity_in_body_frame();
+        ax += g_base.x(); ay += g_base.y(); az += g_base.z();
+      }
+      fc_->update_imu(t,
+        msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z,
+        ax, ay, az);
+      return;
+    }
+
+    tf2::Quaternion q(
+      tf_stamped.transform.rotation.x,
+      tf_stamped.transform.rotation.y,
+      tf_stamped.transform.rotation.z,
+      tf_stamped.transform.rotation.w);
+    tf2::Matrix3x3 R(q);
+
+    tf2::Vector3 w(msg->angular_velocity.x,
+                   msg->angular_velocity.y,
+                   msg->angular_velocity.z);
+    tf2::Vector3 w_base = R * w;
+
+    tf2::Vector3 a(msg->linear_acceleration.x,
+                   msg->linear_acceleration.y,
+                   msg->linear_acceleration.z);
+    tf2::Vector3 a_base = R * a;
+
+    if (imu2_remove_gravity_) {
+      tf2::Vector3 g_base = gravity_in_body_frame();
+      a_base += g_base;
+    }
+
+    fc_->update_imu(t,
+      w_base.x(), w_base.y(), w_base.z(),
+      a_base.x(), a_base.y(), a_base.z());
     fuse_imu_orientation_if_valid(t, msg, q);
   }
 
@@ -1803,6 +1912,7 @@ private:
   std::shared_ptr<tf2_ros::TransformListener>    tf_listener_;
 
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr          imu_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr          imu2_sub_;
   rclcpp::Subscription<compass_msgs::msg::Azimuth>::SharedPtr     azimuth_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr          gnss_heading_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr        encoder_sub_;
@@ -1851,6 +1961,9 @@ private:
   bool        imu_remove_gravity_  = false;
   std::string imu_frame_override_;
   std::string imu_frame_resolved_;
+  std::string imu2_topic_;
+  std::string imu2_frame_override_;
+  bool        imu2_remove_gravity_ = false;
   double      last_imu_time_       = 0.0;   // timestamp of most recent IMU message
   fusioncore::sensors::LLAPoint  gnss_ref_lla_;
   fusioncore::sensors::ECEFPoint gnss_ref_ecef_;
