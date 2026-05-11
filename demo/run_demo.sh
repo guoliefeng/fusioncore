@@ -85,11 +85,16 @@ if [[ -z "$AMENT_PREFIX_PATH" ]]; then
     fi
 fi
 
-if [[ -f "$REPO_ROOT/install/setup.bash" ]]; then
-    source "$REPO_ROOT/install/setup.bash"
+# Support both standalone build and standard workspace layout (~/ros2_ws/src/fusioncore)
+if   [[ -f "$REPO_ROOT/install/setup.bash"       ]]; then
+    set +u; source "$REPO_ROOT/install/setup.bash"; set -u 2>/dev/null || true
+elif [[ -f "$REPO_ROOT/../../install/setup.bash" ]]; then
+    set +u; source "$REPO_ROOT/../../install/setup.bash"; set -u 2>/dev/null || true
+elif [[ -n "${AMENT_PREFIX_PATH:-}" ]]; then
+    info "Using already-sourced workspace"
 else
-    warn "FusionCore install not found at $REPO_ROOT/install/."
-    warn "Build first: colcon build --packages-up-to fusioncore_ros fusioncore_datasets"
+    warn "FusionCore install not found. Build first:"
+    warn "  cd ~/ros2_ws && colcon build --packages-up-to fusioncore_ros"
     exit 1
 fi
 
@@ -100,7 +105,7 @@ rm -rf "$DEMO_OUT"
 info "Starting FusionCore and replaying demo bag (120 seconds at 2x speed)..."
 info "Press Ctrl+C to stop early."
 
-ros2 launch fusioncore demo/nclt_demo.launch.py \
+ros2 launch "$REPO_ROOT/demo/nclt_demo.launch.py" \
     bag:="$DEMO_BAG" output:="$DEMO_OUT" rate:=2.0 &
 LAUNCH_PID=$!
 

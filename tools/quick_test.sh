@@ -13,10 +13,15 @@
 #   OR use the Docker container:
 #     docker run --rm ghcr.io/manankharwar/fusioncore:latest bash tools/quick_test.sh
 
-set -euo pipefail
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Support both standalone build (install/ inside repo) and standard workspace layout
+# (repo lives at ~/ros2_ws/src/fusioncore, install at ~/ros2_ws/install)
+if   [[ -f "${REPO_ROOT}/install/setup.bash"       ]]; then WORKSPACE="${REPO_ROOT}"
+elif [[ -f "${REPO_ROOT}/../../install/setup.bash" ]]; then WORKSPACE="$(cd "${REPO_ROOT}/../.." && pwd)"
+else WORKSPACE="${REPO_ROOT}"; fi
 PIDS=()
 FAIL=0
 
@@ -50,10 +55,13 @@ if [[ -z "${AMENT_PREFIX_PATH:-}" ]]; then
 fi
 
 if [[ -f "${WORKSPACE}/install/setup.bash" ]]; then
-    source "${WORKSPACE}/install/setup.bash"
-    pass "ROS environment sourced"
+    set +u; source "${WORKSPACE}/install/setup.bash"; set -u 2>/dev/null || true
+    pass "ROS environment sourced (workspace: ${WORKSPACE})"
+elif [[ -n "${AMENT_PREFIX_PATH:-}" ]]; then
+    pass "ROS environment already sourced"
 else
-    fail "FusionCore not built. Run:  cd ${WORKSPACE} && colcon build --packages-up-to fusioncore_ros"
+    fail "FusionCore not built. Build with colcon from your workspace root, e.g.:"
+    fail "  cd ~/ros2_ws && colcon build --packages-up-to fusioncore_ros"
     exit 1
 fi
 
