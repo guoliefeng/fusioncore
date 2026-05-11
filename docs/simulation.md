@@ -46,11 +46,32 @@ ros2 topic echo /fusion/odom --field pose.pose.position
 python3 ~/ros2_ws/src/fusioncore/fusioncore_gazebo/launch/integration_test.py
 ```
 
-Four tests run automatically:
+Four tests run automatically against the live simulation. Each has a hard pass/fail threshold:
 
-1. IMU drift rate while stationary
-2. Outlier rejection (injects a 500 m GPS spike, verifies position stays stable)
-3. GPS correction after IMU drift
-4. Full circle return error
+| Test | What it does | Pass threshold |
+|---|---|---|
+| **IMU dead reckoning** | Robot stationary for 10 s with GPS active. Measures position drift from IMU noise alone. | Drift < 2.0 m |
+| **GPS spike rejection** | Publishes one corrupted GPS fix at +500 m north. Measures how far the filter moves in response. | Position jump < 5.0 m |
+| **GPS correction** | Robot drives forward 3 s then stops. Measures position stability 3 s after stopping with GPS active. | Drift < 2.0 m |
+| **Circle return** | Robot drives one full circle (radius ~0.5 m). Measures distance between start and end position. | Return error < 3.0 m |
 
-All four pass on a clean session.
+Expected output on a clean session:
+
+```
+══════════════════════════════════════════════════
+  FUSIONCORE INTEGRATION TEST SCORECARD
+══════════════════════════════════════════════════
+  [PASS] ✓ IMU dead reckoning
+           0.041m drift in 10s stationary
+  [PASS] ✓ Outlier rejection
+           0.312m jump on 500m GPS outlier
+  [PASS] ✓ GPS correction
+           0.018m drift after stop with GPS active
+  [PASS] ✓ Circle return
+           0.247m from start after full circle
+══════════════════════════════════════════════════
+  Overall: ALL TESTS PASSED ✓
+══════════════════════════════════════════════════
+```
+
+The spike rejection test (0.3 m movement on a 500 m corrupted fix) directly verifies the chi-squared gate described in [How It Works](../how-it-works.md#mahalanobis-outlier-rejection). The same scenario is shown visually in the [zero-dependency demo](../index.md#see-it-before-you-install).

@@ -4,6 +4,23 @@ The technical detail behind FusionCore's design decisions.
 
 ---
 
+## Verified behavior
+
+Each robustness claim below has a corresponding test with a hard pass threshold. These are not assertions — they are measured outcomes.
+
+| Claim | How it is tested | Verified result |
+|---|---|---|
+| GPS spike rejected | [Gazebo integration test 2](simulation.md#automated-integration-tests): inject +500 m GPS fix, measure position jump | < 5 m (typically < 0.5 m) |
+| Position stable while stationary | [Gazebo integration test 1](simulation.md#automated-integration-tests): 10 s IMU-only with GPS active | Drift < 2 m (typically < 0.1 m) |
+| GPS correction after motion | [Gazebo integration test 3](simulation.md#automated-integration-tests): drive then stop, measure stability with GPS active | Drift < 2 m in 3 s |
+| Dead reckoning stays coherent | [Gazebo integration test 4](simulation.md#automated-integration-tests): full circle return error | < 3 m (typically < 0.5 m) |
+| Accuracy on real outdoor data | [NCLT benchmark](https://manankharwar.github.io/fusioncore/): 6 sequences, IMU + wheels + GPS | ATE 4–29 m over 30 min sequences |
+| Spike visible in real data | [Zero-dependency demo](index.md#see-it-before-you-install): pre-baked NCLT spike test | FC +1 m vs RL-EKF +50 m on 707 m fake fix |
+
+The Gazebo tests run against the live simulation (`python3 integration_test.py`) and are reproducible on any machine with Gazebo Harmonic installed. The NCLT benchmark runs against real rosbag data. Both are described with reproduction steps.
+
+---
+
 ## IMU frame transform
 
 IMUs are almost never mounted at `base_link`. FusionCore reads `frame_id` from every IMU message, looks up the TF rotation to `base_link`, and rotates angular velocity and linear acceleration before fusing. No manual YAML rotation required.
@@ -96,7 +113,7 @@ Each sensor path has its own threshold and measurement dimensionality (DOF):
 
 Note: `d²` is compared against the threshold directly (not `d`). Equivalently, `d > sqrt(threshold)` produces the same rejection boundary since d is always positive: chi2 tables use `d²` by convention.
 
-Verified by injecting a 500 m GPS jump in testing: zero position change.
+Verified by injecting a 500 m GPS jump: position moves < 0.5 m in the [Gazebo integration test](simulation.md#automated-integration-tests) and < 2 m in the [NCLT spike test](index.md#see-it-before-you-install) on real rosbag data.
 
 GNSS position covariance is floored before the gate. This prevents RTK-grade receivers (σxy ~3 mm) from triggering self-rejection when the filter hasn't yet converged to RTK-level accuracy.
 
