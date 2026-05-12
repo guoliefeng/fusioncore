@@ -56,6 +56,16 @@ fusioncore:
 
     # Optional second velocity source (lidar odometry, visual odometry, etc.)
     # Must publish nav_msgs/Odometry with velocity in twist field.
+    # FusionCore does NOT accept sensor_msgs/LaserScan or PointCloud2 directly.
+    # A scan-matching node must sit between your LiDAR and FusionCore:
+    #
+    #   LaserScan / PointCloud2
+    #       → KISS-ICP             → /kiss/odometry      (nav_msgs/Odometry)
+    #       → rtabmap icp_odometry → /icp_odom           (nav_msgs/Odometry)
+    #       → rf2o_laser_odometry  → /odom               (nav_msgs/Odometry)
+    #
+    # Note: slam_toolbox publishes PoseWithCovarianceStamped, not Odometry.
+    # It cannot be used directly as encoder2; wrap it or use KISS-ICP instead.
     encoder2.topic: ""          # e.g. "/kiss/odometry" or "/icp_odom"
 
     # ── GPS ───────────────────────────────────────────────────────────────────

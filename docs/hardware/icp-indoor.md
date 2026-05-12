@@ -24,11 +24,18 @@ ros2 launch fusioncore_ros fusioncore.launch.py \
 
 Replace `/kiss/odometry` with whatever your ICP pipeline publishes:
 
-| ICP pipeline | Default topic |
-|---|---|
-| KISS-ICP | `/kiss/odometry` |
-| rtabmap `icp_odometry` | `/icp_odom` |
-| cartographer | `/tracked_pose` (pose only: needs twist wrapper) |
+| ICP pipeline | Default topic | Type |
+|---|---|---|
+| KISS-ICP | `/kiss/odometry` | `nav_msgs/Odometry` |
+| rtabmap `icp_odometry` | `/icp_odom` | `nav_msgs/Odometry` |
+| rf2o_laser_odometry | `/odom` | `nav_msgs/Odometry` |
+| cartographer | `/tracked_pose` | `PoseStamped` — needs twist wrapper |
+| slam_toolbox | `/pose` | `PoseWithCovarianceStamped` — needs twist wrapper |
+
+> **FusionCore does not accept `sensor_msgs/LaserScan` or `PointCloud2` directly.**
+> A scan-matching node must convert your LiDAR data to `nav_msgs/Odometry` first.
+> Nodes that publish pose-only (cartographer, slam_toolbox) need a wrapper that
+> differentiates the pose to produce a velocity in the twist field.
 
 FusionCore treats LiDAR ICP odometry exactly like wheel odometry: same outlier gate, same adaptive noise, same ZUPT logic. The only difference is the noise values: ICP is more accurate than wheels so `icp_indoor.yaml` uses tighter defaults (`encoder.vel_noise: 0.02` instead of `0.05`).
 
