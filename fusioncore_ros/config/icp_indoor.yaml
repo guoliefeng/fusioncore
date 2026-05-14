@@ -87,7 +87,7 @@ fusioncore:
     outlier_rejection: true
     outlier_threshold_gnss: 16.27
     outlier_threshold_imu: 15.09
-    outlier_threshold_enc: 11.34      # chi2(3, 0.999): rejects ICP jumps
+    outlier_threshold_enc: 11.34      # chi2(3, 0.99): rejects ICP jumps
     outlier_threshold_hdg: 10.83
 
     # ── Adaptive noise ────────────────────────────────────────────────────────

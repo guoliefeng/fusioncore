@@ -22,7 +22,7 @@ fusioncore:
     gnss.min_satellites: 5
 
     # Outlier rejection: moderate: signal comes through gaps, occasional reflections
-    # chi2(3, 0.01) = 11.34: rejects top 1% of Mahalanobis distances
+    # chi2(3, 0.99) = 11.34: rejects top 1% of Mahalanobis distances
     outlier_threshold_gnss: 11.34
 
     # Adaptive noise: medium window: quality varies patch by patch

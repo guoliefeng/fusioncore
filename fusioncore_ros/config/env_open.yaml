@@ -21,7 +21,7 @@ fusioncore:
     gnss.min_satellites: 4
 
     # Outlier rejection: permissive: GPS is stable, no need to reject much
-    # chi2(3, 0.001) = 16.27: only the most extreme jumps get rejected
+    # chi2(3, 0.999) = 16.27: only the most extreme jumps get rejected
     outlier_threshold_gnss: 16.27
 
     # Adaptive noise: fast learning: signal is stable and consistent
