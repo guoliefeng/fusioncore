@@ -74,12 +74,37 @@ def main():
     ref_lat, ref_lon, ref_alt = rows[0][1], rows[0][2], rows[0][3]
     ref_x, ref_y, ref_z = lla_to_ecef(ref_lat, ref_lon, ref_alt)
 
+    # Convert all to ENU first so we can do velocity-based outlier rejection.
+    enu_rows = []
+    for utime, lat_r, lon_r, alt_m in rows:
+        px, py, pz = lla_to_ecef(lat_r, lon_r, alt_m)
+        e, n, u = ecef_to_enu(px, py, pz, ref_lat, ref_lon, ref_x, ref_y, ref_z)
+        enu_rows.append((utime / 1e6, e, n, u))
+
+    # Reject fixes where the implied speed from the previous accepted fix
+    # exceeds a physical limit. 30 m/s is generous (Segway RMP max ~3 m/s),
+    # but it catches the large position teleports that slip through the mode=3
+    # filter due to carrier phase reinitialisation or severe multipath.
+    MAX_SPEED_MS = 30.0
+    filtered = [enu_rows[0]]
+    rejected = 0
+    for ts, e, n, u in enu_rows[1:]:
+        prev_ts, prev_e, prev_n, prev_u = filtered[-1]
+        dt = ts - prev_ts
+        if dt <= 0:
+            continue
+        dist = math.sqrt((e - prev_e)**2 + (n - prev_n)**2 + (u - prev_u)**2)
+        if dist / dt > MAX_SPEED_MS:
+            rejected += 1
+            continue
+        filtered.append((ts, e, n, u))
+
+    if rejected:
+        print(f'Rejected {rejected} outlier fix(es) (implied speed > {MAX_SPEED_MS} m/s)')
+
     count = 0
     with open(args.out, 'w') as f:
-        for utime, lat_r, lon_r, alt_m in rows:
-            px, py, pz = lla_to_ecef(lat_r, lon_r, alt_m)
-            e, n, u = ecef_to_enu(px, py, pz, ref_lat, ref_lon, ref_x, ref_y, ref_z)
-            ts = utime / 1e6
+        for ts, e, n, u in filtered:
             # Identity quaternion: RTK has no orientation
             f.write(f'{ts:.6f} {e:.6f} {n:.6f} {u:.6f} 0.000000 0.000000 0.000000 1.000000\n')
             count += 1
