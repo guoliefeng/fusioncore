@@ -229,24 +229,22 @@ private:
     bool ready() const { return (int)innovations.size() >= max_size / 2; }
 
     // Estimate covariance from innovation window.
-    // Uses the sample covariance (mean-subtracted), not the autocorrelation.
-    // In a well-tuned filter innovations are zero-mean, but during startup
-    // or model mismatch the mean can be nonzero: subtracting it prevents
-    // R from being inflated by a squared bias term.
+    // Includes the bias term (mean^2) so systematic offsets (e.g. GPS multipath
+    // pushing fixes consistently in one direction) inflate R, not just random scatter.
     ZMatrix estimate_covariance() const {
-      // Compute sample mean
       Eigen::Matrix<double, z_dim, 1> mean = Eigen::Matrix<double, z_dim, 1>::Zero();
       for (const auto& nu : innovations)
         mean += nu;
       mean /= (double)innovations.size();
 
-      // Compute mean-subtracted sample covariance
       ZMatrix C = ZMatrix::Zero();
       for (const auto& nu : innovations) {
         Eigen::Matrix<double, z_dim, 1> d = nu - mean;
         C += d * d.transpose();
       }
-      return C / (double)innovations.size();
+      C /= (double)innovations.size();
+      C += mean * mean.transpose();  // systematic bias term
+      return C;
     }
   };
 

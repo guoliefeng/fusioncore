@@ -658,13 +658,14 @@ bool FusionCore::apply_gnss_update(
   // Start with message covariance or HDOP-based estimate
   sensors::GnssPosNoiseMatrix R = sensors::gnss_pos_noise_matrix(config_.gnss, fix);
 
-  // Blend with adaptive R if the fix does NOT have full message covariance
-  // (if it does have full covariance, trust the receiver: don't override)
-  if (adaptive_initialized_ && config_.adaptive_gnss && !fix.has_full_covariance) {
-    R = (1.0 - config_.adaptive_alpha) * R + config_.adaptive_alpha * R_gnss_;
-    // Guard diagonal
+  // Inflate R toward the adaptive estimate once the window has enough data.
+  // Only inflate: if GPS is actually good, R_gnss_ stays near message R and max() is a no-op.
+  // When GPS is consistently biased (multipath, foliage), R_gnss_ reflects the true error
+  // magnitude and Kalman gain shrinks accordingly. Full-covariance fixes are left untouched:
+  // the receiver already knows its own noise.
+  if (adaptive_initialized_ && config_.adaptive_gnss && !fix.has_full_covariance && gnss_innovations_.ready()) {
     for (int i = 0; i < 3; ++i)
-      if (R(i,i) < 1e-6) R(i,i) = 1e-6;
+      R(i,i) = std::max(R(i,i), R_gnss_(i,i));
   }
 
   bool use_lever_arm = !fix.lever_arm.is_zero() && heading_validated_;
