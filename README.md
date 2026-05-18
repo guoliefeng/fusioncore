@@ -9,7 +9,7 @@
 **ROS 2 UKF sensor fusion for robots that run in the real world. IMU + wheel encoders + GPS at 100 Hz. Handles bad calibration, timestamp jitter, delayed GPS, wheel slip, and ARM hardware out of the box. Apache 2.0.**
 
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/f2284646-d8cb-47eb-81b8-c256e357107e" width="900" autoplay loop muted playsinline></video>
+  <img width="900" height="500" alt="FusionCore running on a real robot" src="https://github.com/user-attachments/assets/f2284646-d8cb-47eb-81b8-c256e357107e"/>
 </p>
 
 ---
