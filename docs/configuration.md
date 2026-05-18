@@ -227,7 +227,7 @@ fusioncore:
     # ── Deterministic replay ──────────────────────────────────────────────────
     replay.checkpoint_path: "/tmp/fusioncore_checkpoint.txt"
     # File used by ~/save_checkpoint and ~/load_checkpoint services.
-    # save_checkpoint: writes the full 22-state + 22x22 covariance to this file.
+    # save_checkpoint: writes the full 23-state + 23x23 covariance to this file.
     # load_checkpoint: restores that state (restarts filter from that point).
     # Workflow: replay a bag to a known-good point → save → tweak params →
     #   load (instant, no re-replay) → observe the problem window.

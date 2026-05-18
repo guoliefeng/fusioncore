@@ -467,7 +467,7 @@ ros2 service call /fusioncore/save_checkpoint std_srvs/srv/Trigger
 ros2 service call /fusioncore/load_checkpoint std_srvs/srv/Trigger
 ```
 
-`save_checkpoint` serializes the full 22-dimensional state vector and 22×22 covariance matrix to a text file (`/tmp/fusioncore_checkpoint.txt` by default, configurable via `replay.checkpoint_path`).
+`save_checkpoint` serializes the full 23-dimensional state vector and 23×23 covariance matrix to a text file (`/tmp/fusioncore_checkpoint.txt` by default, configurable via `replay.checkpoint_path`).
 
 `load_checkpoint` restores that exact state and resumes the filter from that point.
 
