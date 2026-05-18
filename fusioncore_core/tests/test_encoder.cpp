@@ -84,9 +84,13 @@ TEST(EncoderTest, EncoderUpdateCorrectVelocity) {
 
 // ─── Test 5: IMU + encoder together break bias/velocity coupling ─────────────
 // This is the key test: the moment FusionCore does something no single sensor can.
-// IMU alone: cannot separate WZ from B_GZ (observability problem)
-// Encoder alone: gives WZ - B_GZ (independent velocity reference)
-// Together: the coupling breaks: filter estimates both correctly
+// IMU alone: cannot separate WZ from B_GZ (observability problem).
+// Encoder alone: measures WZ + B_EWZ (its own bias, calibrated via GPS heading).
+// Together (with B_EWZ known from GPS): encoder pins WZ, IMU can estimate B_GZ.
+//
+// This test simulates the GPS-blackout phase where B_EWZ is already calibrated
+// (tight prior on B_EWZ). Without that prior, WZ and the two biases are individually
+// unobservable from IMU + encoder alone.
 
 TEST(EncoderTest, IMUAndEncoderTogetherEstimateBias) {
   UKFParams ukf_params;
@@ -98,12 +102,14 @@ TEST(EncoderTest, IMUAndEncoderTogetherEstimateBias) {
   initial.x       = StateVector::Zero();
   initial.x[B_GZ] = 0.1;   // wrong bias: reality has zero bias
   initial.P       = StateMatrix::Identity() * 0.1;
+  // B_EWZ is calibrated from prior GPS updates: treat as known zero.
+  initial.P(B_EWZ, B_EWZ) = 1e-8;
 
   ukf.init(initial);
 
-  // Reality: robot turning at 0.5 rad/s, zero gyro bias
-  // IMU reads: WZ + B_GZ = 0.5 + 0.0 = 0.5  (but filter thinks bias=0.1)
-  // Encoder reads: WZ - B_GZ = 0.5 - 0.0 = 0.5
+  // Reality: robot turning at 0.5 rad/s, zero gyro bias, zero encoder WZ bias
+  // IMU reads: WZ + B_GZ = 0.5 + 0.0 = 0.5  (but filter thinks B_GZ=0.1)
+  // Encoder reads: WZ + B_EWZ = 0.5 + 0.0 = 0.5  (B_EWZ pinned ~0 by tight prior)
 
   ImuMeasurement     z_imu     = ImuMeasurement::Zero();
   EncoderMeasurement z_encoder = EncoderMeasurement::Zero();
