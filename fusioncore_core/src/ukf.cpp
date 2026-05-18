@@ -56,7 +56,8 @@ void UKF::build_process_noise() {
                    params_.q_angular_vel, params_.q_angular_vel, params_.q_angular_vel,
                    params_.q_acceleration, params_.q_acceleration, params_.q_acceleration,
                    params_.q_gyro_bias, params_.q_gyro_bias, params_.q_gyro_bias,
-                   params_.q_accel_bias, params_.q_accel_bias, params_.q_accel_bias;
+                   params_.q_accel_bias, params_.q_accel_bias, params_.q_accel_bias,
+                   params_.q_encoder_wz_bias;
 }
 
 Eigen::MatrixXd UKF::generate_sigma_points() {
@@ -139,6 +140,11 @@ void UKF::predict(double dt) {
     P_pred(X, X) *= pos_noise_scale_;
     P_pred(Y, Y) *= pos_noise_scale_;
     P_pred(Z, Z) *= pos_noise_scale_;
+  }
+  if (gyro_bias_noise_scale_ != 1.0) {
+    P_pred(B_GX, B_GX) *= gyro_bias_noise_scale_;
+    P_pred(B_GY, B_GY) *= gyro_bias_noise_scale_;
+    P_pred(B_GZ, B_GZ) *= gyro_bias_noise_scale_;
   }
   for (int i = 0; i < n_sigma; ++i) {
     // Plain Euclidean difference: no normalize_state here.

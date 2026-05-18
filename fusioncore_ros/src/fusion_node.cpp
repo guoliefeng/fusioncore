@@ -161,9 +161,17 @@ public:
     declare_parameter("outlier_threshold_imu",  15.09);
     declare_parameter("outlier_threshold_enc",  11.34);
     declare_parameter("outlier_threshold_hdg",  10.83);
-    declare_parameter("gnss.coast_n",           5);
-    declare_parameter("gnss.coast_q_factor",    20.0);
-    declare_parameter("gnss.coast_timeout_s",   0.0);
+    declare_parameter("gnss.coast_n",               5);
+    declare_parameter("gnss.coast_q_factor",        20.0);
+    declare_parameter("gnss.coast_timeout_s",       0.0);
+    declare_parameter("gnss.coast_q_bias_factor",   100.0);
+    declare_parameter("gnss.coast_imu_wz_scale",    1.0);
+    declare_parameter("gnss.recovery_rejection_n",  0);
+    declare_parameter("gnss.p_inflate_sigma",       50.0);
+    declare_parameter("gnss.recovery_timeout_s",    0.0);
+    declare_parameter("gnss.track_heading_enabled",   true);
+    declare_parameter("gnss.track_heading_min_dist",  5.0);
+    declare_parameter("gnss.track_heading_max_sigma", 0.4);
 
     declare_parameter("adaptive.imu",     true);
     declare_parameter("adaptive.encoder", true);
@@ -217,8 +225,9 @@ public:
     declare_parameter("ukf.q_velocity",     0.1);
     declare_parameter("ukf.q_angular_vel",  0.1);
     declare_parameter("ukf.q_acceleration", 1.0);
-    declare_parameter("ukf.q_gyro_bias",    1e-5);
-    declare_parameter("ukf.q_accel_bias",   1e-5);
+    declare_parameter("ukf.q_gyro_bias",         1e-5);
+    declare_parameter("ukf.q_accel_bias",        1e-5);
+    declare_parameter("ukf.q_encoder_wz_bias",   1e-7);
 
     base_frame_   = get_parameter("base_frame").as_string();
     odom_frame_   = get_parameter("odom_frame").as_string();
@@ -312,9 +321,17 @@ public:
     config.outlier_threshold_imu  = get_parameter("outlier_threshold_imu").as_double();
     config.outlier_threshold_enc  = get_parameter("outlier_threshold_enc").as_double();
     config.outlier_threshold_hdg  = get_parameter("outlier_threshold_hdg").as_double();
-    config.gnss_coast_n           = get_parameter("gnss.coast_n").as_int();
-    config.gnss_coast_q_factor    = get_parameter("gnss.coast_q_factor").as_double();
-    config.gnss_coast_timeout_s   = get_parameter("gnss.coast_timeout_s").as_double();
+    config.gnss_coast_n               = get_parameter("gnss.coast_n").as_int();
+    config.gnss_coast_q_factor        = get_parameter("gnss.coast_q_factor").as_double();
+    config.gnss_coast_timeout_s       = get_parameter("gnss.coast_timeout_s").as_double();
+    config.gnss_coast_q_bias_factor   = get_parameter("gnss.coast_q_bias_factor").as_double();
+    config.gnss_coast_imu_wz_scale    = get_parameter("gnss.coast_imu_wz_scale").as_double();
+    config.gnss_recovery_rejection_n  = get_parameter("gnss.recovery_rejection_n").as_int();
+    config.gnss_p_inflate_sigma       = get_parameter("gnss.p_inflate_sigma").as_double();
+    config.gnss_recovery_timeout_s    = get_parameter("gnss.recovery_timeout_s").as_double();
+    config.gps_track_heading_enabled   = get_parameter("gnss.track_heading_enabled").as_bool();
+    config.gps_track_heading_min_dist  = get_parameter("gnss.track_heading_min_dist").as_double();
+    config.gps_track_heading_max_sigma = get_parameter("gnss.track_heading_max_sigma").as_double();
 
     config.adaptive_imu     = get_parameter("adaptive.imu").as_bool();
     config.adaptive_encoder = get_parameter("adaptive.encoder").as_bool();
@@ -334,8 +351,9 @@ public:
     config.ukf.q_velocity     = get_parameter("ukf.q_velocity").as_double();
     config.ukf.q_angular_vel  = get_parameter("ukf.q_angular_vel").as_double();
     config.ukf.q_acceleration = get_parameter("ukf.q_acceleration").as_double();
-    config.ukf.q_gyro_bias    = get_parameter("ukf.q_gyro_bias").as_double();
-    config.ukf.q_accel_bias   = get_parameter("ukf.q_accel_bias").as_double();
+    config.ukf.q_gyro_bias          = get_parameter("ukf.q_gyro_bias").as_double();
+    config.ukf.q_accel_bias         = get_parameter("ukf.q_accel_bias").as_double();
+    config.ukf.q_encoder_wz_bias    = get_parameter("ukf.q_encoder_wz_bias").as_double();
 
     zupt_enabled_            = get_parameter("zupt.enabled").as_bool();
     zupt_velocity_threshold_ = get_parameter("zupt.velocity_threshold").as_double();

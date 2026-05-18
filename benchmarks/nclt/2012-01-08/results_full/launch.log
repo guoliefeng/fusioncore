@@ -1,0 +1,157 @@
+[INFO] [launch]: All log files can be found below /home/manankharwar/.ros/log/2026-05-17-15-37-13-884108-DESKTOP-SE199PS-152936
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [launch.user]: Starting NCLT benchmark...
+[37;1m2026-05-17 15:37:14.741 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[INFO] [nclt_player.py-1]: process started with pid [152993]
+[INFO] [static_transform_publisher-2]: process started with pid [152995]
+[INFO] [static_transform_publisher-3]: process started with pid [152996]
+[INFO] [fusioncore_node-4]: process started with pid [152997]
+[INFO] [ekf_node-5]: process started with pid [152998]
+[INFO] [navsat_transform_node-6]: process started with pid [152999]
+[ekf_node-5] [37;1m2026-05-17 15:37:17.508 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[navsat_transform_node-6] [37;1m2026-05-17 15:37:17.591 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[static_transform_publisher-3] [INFO] [1779046638.179196985] [gps_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-3] translation: ('0.000000', '0.000000', '0.300000')
+[static_transform_publisher-3] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-3] from 'base_link' to 'gnss_link'
+[fusioncore_node-4] [37;1m2026-05-17 15:37:18.675 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[ekf_node-5] [INFO] [1779046638.846640045] [rl_ekf]: Waiting for clock to start...
+[navsat_transform_node-6] [INFO] [1779046639.066334365] [navsat_transform]: Waiting for clock to start...
+[static_transform_publisher-2] [INFO] [1779046639.451579725] [imu_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-2] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-2] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-2] from 'base_link' to 'imu_link'
+[fusioncore_node-4] [INFO] [1779046640.062914265] [fusioncore]: FusionCore node created
+[fusioncore_node-4] [INFO] [1779046640.181792745] [fusioncore]: Configuring FusionCore...
+[fusioncore_node-4] [INFO] [1779046640.208424555] [fusioncore]: IMU gravity removal: disabled
+[fusioncore_node-4] [INFO] [1779046640.208549745] [fusioncore]: GNSS min_fix_type: 1 (1=GPS, 2=DGPS, 3=RTK_FLOAT, 4=RTK_FIXED)
+[fusioncore_node-4] [INFO] [1779046640.246094955] [fusioncore]: PROJ: transform ready (EPSG:4326 → EPSG:4978)
+[fusioncore_node-4] [INFO] [1779046640.246158675] [fusioncore]: PROJ: using first GPS fix as local reference origin
+[fusioncore_node-4] [INFO] [1779046640.363302405] [fusioncore]: Dual antenna heading disabled.
+[fusioncore_node-4] [INFO] [1779046640.363394745] [fusioncore]: FusionCore configured. base_frame=base_link odom_frame=odom rate=100Hz
+[fusioncore_node-4] [INFO] [1779046640.375236675] [fusioncore]: Activating FusionCore...
+[fusioncore_node-4] [INFO] [1779046640.375315605] [fusioncore]: --- TF Validation ---
+[fusioncore_node-4] [INFO] [1779046640.385625195] [fusioncore]:   [OK]      imu_link -> base_link
+[fusioncore_node-4] [INFO] [1779046640.385730495] [fusioncore]: ---------------------
+[fusioncore_node-4] [INFO] [1779046640.549714185] [fusioncore]: FusionCore active. Listening for sensors.
+[nclt_player.py-1] [37;1m2026-05-17 15:37:21.126 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[INFO] [ros2-7]: process started with pid [153171]
+[nclt_player.py-1] [INFO] [1779046643.711283055] [nclt_player]: Loading NCLT data from: /mnt/c/Users/Admin/ROS/ROS/fusioncore/benchmarks/nclt/2012-01-08/raw files
+[ros2-7] [WARN] [ros2bag]: Positional "topics" argument deprecated. Please use optional "--topics" argument instead.
+[nclt_player.py-1] [INFO] [1779046645.999101416] [nclt_player]:   Euler: 269972 rows from ms25_euler.csv
+[ros2-7] [37;1m2026-05-17 15:37:26.797 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7000: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[ros2-7] stdin is not a terminal device. Keyboard handling disabled.[INFO] [1779046647.283880306] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[ros2-7] [INFO] [1779046647.284019266] [rosbag2_recorder]: Event publisher thread: Started
+[ros2-7] [INFO] [1779046647.393836546] [rosbag2_recorder]: Starting recording to '/mnt/c/Users/Admin/ROS/ROS/fusioncore/benchmarks/nclt/2012-01-08/bag_full'
+[ros2-7] [INFO] [1779046648.087358726] [rosbag2_recorder]: Subscribed to topic '/gnss/fix'
+[ros2-7] [INFO] [1779046648.917895286] [rosbag2_recorder]: Subscribed to topic '/fusion/odom'
+[ros2-7] [INFO] [1779046649.117839736] [rosbag2_recorder]: Subscribed to topic '/clock'
+[ros2-7] [INFO] [1779046649.118085976] [rosbag2_recorder]: Listening for topics...
+[ros2-7] [INFO] [1779046649.118115406] [rosbag2_recorder]: Recording...
+[ros2-7] [INFO] [1779046649.118162386] [rosbag2_recorder]: Topics discovery started.
+[nclt_player.py-1] [INFO] [1779046653.270511504] [nclt_player]:   IMU:  269979 rows from ms25.csv
+[nclt_player.py-1] [INFO] [1779046653.659837510] [nclt_player]:   GPS:  22041 fixes (24406 no-fix skipped)
+[nclt_player.py-1] [INFO] [1779046664.276563209] [nclt_player]:   Odom: 612239 velocity estimates from odometry_mu_100hz.csv
+[nclt_player.py-1] [INFO] [1779046664.608140227] [nclt_player]: Loaded 904259 events  (269979 IMU, 22041 GPS, 612239 odom)  rate=3.0x
+[fusioncore_node-4] [INFO] [1779046664.611146928] [fusioncore]: Filter initialized at t=1326030975.716 (first IMU)
+[fusioncore_node-4] [INFO] [1779046664.730087969] [fusioncore]: GNSS reference set: lat=42.293260 lon=-83.709691
+[fusioncore_node-4] [INFO] [1779046664.730298550] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[navsat_transform_node-6] [ERROR] [1779046664.907019305] [navsat_transform]: Latitude 42.2933d more than 20d from N pole
+[navsat_transform_node-6] [ERROR] [1779046665.032683108] [navsat_transform]: Latitude 42.2933d more than 20d from N pole
+[navsat_transform_node-6] [ERROR] [1779046665.124389181] [navsat_transform]: Latitude 42.2933d more than 20d from N pole
+[navsat_transform_node-6] [INFO] [1779046665.140185021] [navsat_transform]: Datum (latitude, longitude, altitude) is (42.29, -83.71, 0.00)
+[navsat_transform_node-6] [INFO] [1779046665.140269557] [navsat_transform]: Datum UTM coordinate is (17 north, 276617.82, 4685889.57)
+[navsat_transform_node-6] [INFO] [1779046665.140400056] [navsat_transform]: Corrected for magnetic declination of 0, user-specified offset of 0 and meridian convergence of -0.0318374. Transform heading factor is now -0.0318374
+[ros2-7] [INFO] [1779046665.452314962] [rosbag2_recorder]: Subscribed to topic '/rl/odometry'
+[ros2-7] [INFO] [1779046665.452398455] [rosbag2_recorder]: All requested topics are subscribed. Stopping discovery...
+[ros2-7] [INFO] [1779046665.452416841] [rosbag2_recorder]: Topics discovery stopped.
+[fusioncore_node-4] [INFO] [1779046666.562870897] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[ekf_node-5] [ERROR] [1779046666.899255830] [rl_ekf]: Failed to meet update rate! Took 0.059740000000000001434seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [INFO] [1779046668.144469133] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046669.820581220] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046671.495550784] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046673.215389674] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046674.886196294] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[ekf_node-5] [ERROR] [1779046675.789300844] [rl_ekf]: Failed to meet update rate! Took 0.071428000000000005376seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [INFO] [1779046676.559203054] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.1m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046678.282187084] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.2m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046680.017442524] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.3m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1779046681.714582604] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 1.4m (need 5.0m), or provide dual antenna / IMU orientation.
+[ekf_node-5] [ERROR] [1779046725.763229927] [rl_ekf]: Failed to meet update rate! Took 0.057827000000000003399seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779046801.669672982] [rl_ekf]: Failed to meet update rate! Took 0.051238999999999999824seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779046887.446185617] [rl_ekf]: Failed to meet update rate! Took 0.059645999999999997632seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779046947.257730250] [rl_ekf]: Failed to meet update rate! Took 0.090717999999999993088seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047002.717164308] [rl_ekf]: Failed to meet update rate! Took 0.056527000000000000857seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047013.281609749] [rl_ekf]: Failed to meet update rate! Took 0.068059999999999995501seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047028.932951038] [rl_ekf]: Failed to meet update rate! Took 0.06411200000000000232seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047062.771067663] [rl_ekf]: Failed to meet update rate! Took 0.052220999999999996588seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047176.878099560] [rl_ekf]: Failed to meet update rate! Took 0.050125999999999996948seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047177.011727314] [rl_ekf]: Failed to meet update rate! Took 0.081008999999999997677seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047255.270118323] [rl_ekf]: Failed to meet update rate! Took 0.065684999999999993392seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047255.403014836] [rl_ekf]: Failed to meet update rate! Took 0.050509999999999999343seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047286.836758491] [rl_ekf]: Failed to meet update rate! Took 0.060209999999999999631seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047431.590956235] [rl_ekf]: Failed to meet update rate! Took 0.067713999999999996415seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047484.267264545] [rl_ekf]: Failed to meet update rate! Took 0.078769000000000005679seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047485.033570178] [rl_ekf]: Failed to meet update rate! Took 0.053686999999999998612seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047490.905269399] [rl_ekf]: Failed to meet update rate! Took 0.083652000000000004132seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047493.385103235] [rl_ekf]: Failed to meet update rate! Took 0.050702999999999998071seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047495.227361133] [rl_ekf]: Failed to meet update rate! Took 0.056876999999999997004seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047497.470922533] [rl_ekf]: Failed to meet update rate! Took 0.062881999999999993456seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047497.640938293] [rl_ekf]: Failed to meet update rate! Took 0.053928999999999997772seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047497.949685543] [rl_ekf]: Failed to meet update rate! Took 0.067752000000000006663seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047498.621365173] [rl_ekf]: Failed to meet update rate! Took 0.071016999999999996795seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047500.213387863] [rl_ekf]: Failed to meet update rate! Took 0.055852999999999999869seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047540.220386096] [rl_ekf]: Failed to meet update rate! Took 0.050480999999999998096seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047548.611443288] [rl_ekf]: Failed to meet update rate! Took 0.068890999999999993908seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047604.052169592] [rl_ekf]: Failed to meet update rate! Took 0.075406000000000000805seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047619.787458857] [rl_ekf]: Failed to meet update rate! Took 0.056322999999999998066seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047685.040332586] [rl_ekf]: Failed to meet update rate! Took 0.050144000000000001072seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047718.933646900] [rl_ekf]: Failed to meet update rate! Took 0.10836600000000000399seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047719.283061280] [rl_ekf]: Failed to meet update rate! Took 0.062562000000000006494seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047727.050464745] [rl_ekf]: Failed to meet update rate! Took 0.051245999999999999885seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047749.748289197] [rl_ekf]: Failed to meet update rate! Took 0.056912999999999998313seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779047753.801294027] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779047786.189996649] [rl_ekf]: Failed to meet update rate! Took 0.050050999999999998269seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047786.585177829] [rl_ekf]: Failed to meet update rate! Took 0.20438000000000000611seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047786.899260099] [rl_ekf]: Failed to meet update rate! Took 0.061474000000000000865seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779047946.639353666] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779047951.436530066] [rl_ekf]: Failed to meet update rate! Took 0.056275999999999999635seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779047951.987800946] [rl_ekf]: Failed to meet update rate! Took 0.062754000000000004222seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779048019.589273501] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1779048021.919055508] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1779048026.452162940] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779048028.300419808] [rl_ekf]: Failed to meet update rate! Took 0.051252999999999999947seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048038.721899929] [rl_ekf]: Failed to meet update rate! Took 0.061268999999999997075seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779048176.999776130] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1779048179.089198940] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1779048181.803785600] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779048314.478545182] [rl_ekf]: Failed to meet update rate! Took 0.064871999999999999109seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048315.715404613] [rl_ekf]: Failed to meet update rate! Took 0.062362000000000000766seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048322.002674489] [rl_ekf]: Failed to meet update rate! Took 0.06028399999999999731seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048358.232084096] [rl_ekf]: Failed to meet update rate! Took 0.072939000000000003832seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779048359.980987727] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779048366.759914134] [rl_ekf]: Failed to meet update rate! Took 0.059772999999999999743seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048369.866358230] [rl_ekf]: Failed to meet update rate! Took 0.050397999999999998355seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1779048507.912960634] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1779048555.878953873] [rl_ekf]: Failed to meet update rate! Took 0.070430000000000006488seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048558.803447263] [rl_ekf]: Failed to meet update rate! Took 0.059131999999999997064seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048569.577786249] [rl_ekf]: Failed to meet update rate! Took 0.11004700000000000593seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048685.636226684] [rl_ekf]: Failed to meet update rate! Took 0.1002529999999999949seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048686.902122958] [rl_ekf]: Failed to meet update rate! Took 0.050500999999999997281seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048688.102687751] [rl_ekf]: Failed to meet update rate! Took 0.057354000000000002202seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048688.908212043] [rl_ekf]: Failed to meet update rate! Took 0.058201000000000002732seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048692.969618478] [rl_ekf]: Failed to meet update rate! Took 0.050915000000000001923seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048693.558839123] [rl_ekf]: Failed to meet update rate! Took 0.052478999999999997872seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048693.609408203] [rl_ekf]: Failed to meet update rate! Took 0.055071000000000001895seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048701.416932698] [rl_ekf]: Failed to meet update rate! Took 0.051534000000000003416seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048702.000820748] [rl_ekf]: Failed to meet update rate! Took 0.050236000000000002874seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048702.209309888] [rl_ekf]: Failed to meet update rate! Took 0.079583000000000000962seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048704.409251240] [rl_ekf]: Failed to meet update rate! Took 0.063977999999999993208seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048714.734932144] [rl_ekf]: Failed to meet update rate! Took 0.059679000000000002879seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048720.047990042] [rl_ekf]: Failed to meet update rate! Took 0.061705000000000002902seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048720.130910494] [rl_ekf]: Failed to meet update rate! Took 0.060400000000000002298seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048721.308325030] [rl_ekf]: Failed to meet update rate! Took 0.12068099999999999661seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048724.943107465] [rl_ekf]: Failed to meet update rate! Took 0.050508999999999998343seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048726.620814264] [rl_ekf]: Failed to meet update rate! Took 0.051610999999999997156seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1779048727.070121647] [rl_ekf]: Failed to meet update rate! Took 0.059333999999999997854seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[nclt_player.py-1] [INFO] [1779048727.228506868] [nclt_player]: Playback complete.

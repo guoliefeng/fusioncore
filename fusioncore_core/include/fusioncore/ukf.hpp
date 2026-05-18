@@ -25,8 +25,9 @@ struct UKFParams {
   double q_velocity     = 0.1;    // (m/s)²/step
   double q_angular_vel  = 0.1;    // (rad/s)²/step
   double q_acceleration = 1.0;    // (m/s²)²/step
-  double q_gyro_bias    = 1e-5;   // (rad/s)²/step -- biases change slowly
-  double q_accel_bias   = 1e-5;   // (m/s²)²/step
+  double q_gyro_bias         = 1e-5;   // (rad/s)²/step -- biases change slowly
+  double q_accel_bias        = 1e-5;   // (m/s²)²/step
+  double q_encoder_wz_bias   = 1e-7;   // (rad/s)²/step -- encoder WZ bias; mechanical, very stable
 };
 
 class UKF {
@@ -77,6 +78,20 @@ public:
   void set_position_noise_scale(double s) { pos_noise_scale_ = s; }
   double position_noise_scale() const     { return pos_noise_scale_; }
 
+  // Scale applied to gyro bias diagonal of Q during GPS coast mode.
+  // Inflating this loosens the filter's confidence in its bias estimate so that
+  // encoder WZ measurements can drive fast bias correction during GPS outages.
+  // 1.0 = normal (tight); 100.0 = fast adaptation.
+  void set_gyro_bias_noise_scale(double s) { gyro_bias_noise_scale_ = s; }
+  double gyro_bias_noise_scale() const     { return gyro_bias_noise_scale_; }
+
+  // Inflate P[X,X] and P[Y,Y] to at least sigma_xy_sq using max().
+  // Cross-covariances are untouched so the UKF update handles the correction.
+  void inflate_position_covariance(double sigma_xy_sq) {
+    state_.P(X, X) = std::max(state_.P(X, X), sigma_xy_sq);
+    state_.P(Y, Y) = std::max(state_.P(Y, Y), sigma_xy_sq);
+  }
+
   // Replace the default motion model (ConstantVelocityAcceleration).
   // Call before the first predict() step.
   void set_motion_model(std::shared_ptr<MotionModelBase> model) {
@@ -86,8 +101,9 @@ public:
 private:
   UKFParams params_;
   State state_;
-  bool   initialized_      = false;
-  double pos_noise_scale_  = 1.0;
+  bool   initialized_           = false;
+  double pos_noise_scale_       = 1.0;
+  double gyro_bias_noise_scale_ = 1.0;
   std::shared_ptr<MotionModelBase> motion_model_;
 
   // UKF weights

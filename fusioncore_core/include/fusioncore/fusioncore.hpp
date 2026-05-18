@@ -29,6 +29,17 @@ struct FusionCoreConfig {
   // geometrically observable from GPS track alone.
   double heading_observable_distance = 5.0;
 
+  // GPS track heading fusion: fuses the GPS displacement bearing as a yaw
+  // pseudo-measurement whenever the robot has moved at least min_dist meters
+  // since the last heading fusion. This is the same mechanism navsat_transform
+  // uses internally and directly corrects heading from GPS geometry without
+  // relying on gyro bias estimation.
+  // max_sigma: skip fusion if position_noise / displacement > this (rad).
+  // 0.4 rad (23 deg) is a reasonable ceiling; tighter GPS gives automatic improvement.
+  bool   gps_track_heading_enabled  = true;
+  double gps_track_heading_min_dist = 5.0;   // meters
+  double gps_track_heading_max_sigma = 0.4;  // radians
+
   // Delay compensation: state snapshot buffer
   // Mahalanobis outlier rejection
   // Rejects measurements that are statistically implausible.
@@ -95,13 +106,51 @@ struct FusionCoreConfig {
   // 0 = disabled; typical value: 5
   int    gnss_coast_n        = 5;
   // Multiplier applied to q_position each predict step while in coast mode.
-  // 20.0 ≈ 4.5× position sigma growth per second at 100Hz IMU.
+  // 20.0 = 4.5x position sigma growth per second at 100Hz IMU.
   double gnss_coast_q_factor = 20.0;
+  // Multiplier applied to q_gyro_bias while in coast mode.
+  // Loosens the filter's confidence in its gyro bias estimate so that encoder WZ
+  // can drive fast bias correction during GPS outages. Without this, a non-zero
+  // gyro bias (present on every real MEMS IMU) accumulates into heading at ~bias*t
+  // with no correction, producing tens of degrees of heading error per minute.
+  // 100.0 is a good default for campus-scale GPS outages (30-500s).
+  double gnss_coast_q_bias_factor = 100.0;
+
+  // Multiplier applied to R_imu[WZ,WZ] during GPS coast mode.
+  // Reduces the IMU's influence on heading rate so the encoder WZ (which has
+  // lower systematic bias than a MEMS gyro) dominates heading integration.
+  // Without GPS, gyro bias corrupts heading at ~bias*time with no correction.
+  // Scale = 100: encoder provides ~70% of WZ information (vs 2% normally).
+  // Scale = 1000: encoder provides ~96% (essentially RL behavior for heading).
+  // 1.0 = disabled (default). Suggested: 500.0 for deployments with long GPS outages.
+  double gnss_coast_imu_wz_scale = 1.0;
   // Also enter coast mode when GPS has been absent for this many seconds.
   // Handles GPS outages where the receiver stops publishing entirely (mode=2,
   // power loss, tunnel) rather than publishing fixes that fail the chi2 gate.
   // 0.0 = disabled; typical value: 30.0
   double gnss_coast_timeout_s = 0.0;
+
+  // Enter position-injection recovery mode only after a GPS absence longer than
+  // this many seconds. Recovery mode bypasses the chi2 gate for the first
+  // returning GPS fix, which is needed for very long blackouts (>100s) where
+  // dead-reckoning drift may exceed the chi2 acceptance range. For short
+  // blackouts (30-90s), the chi2 gate handles recovery correctly and recovery
+  // mode is counter-productive: it allows massive GPS outliers (bad multipath
+  // at the blackout boundary) to be injected unconditionally.
+  // 0.0 = enter recovery mode at the same time as coast mode (original behavior).
+  // Typical: 120.0 (2 minutes). Must be >= gnss_coast_timeout_s.
+  double gnss_recovery_timeout_s = 0.0;
+
+  // After this many consecutive chi2 rejections, inflate P[x,x] and P[y,y]
+  // directly so the next GPS fix passes the gate and corrects via a proper
+  // Bayesian update. This breaks the cascade where GPS is present but the
+  // filter has drifted far enough that all incoming fixes fail chi2.
+  // Fires exactly once per cascade (when counter first reaches this value).
+  // Must be > gnss_coast_n. 0 = disabled; typical value: 15.
+  int    gnss_recovery_rejection_n = 0;
+  // XY sigma for P inflation (meters). 50m covers any realistic drift from
+  // a chi2 cascade, allowing GPS to pull the filter back from up to ~100m off.
+  double gnss_p_inflate_sigma = 50.0;
 };
 
 // How heading was validated: tracked per filter run
@@ -341,6 +390,21 @@ private:
   double last_gnss_y_     = 0.0;
   bool   gnss_pos_set_    = false;
   double distance_traveled_ = 0.0;
+
+  // Reference position for GPS track heading fusion.
+  // Updated only when a heading fusion fires, so displacement accumulates
+  // across multiple GPS fixes until the baseline is large enough to be reliable.
+  double last_hdg_fix_x_  = 0.0;
+  double last_hdg_fix_y_  = 0.0;
+  bool   hdg_fix_set_     = false;
+
+  // True after the first GPS track heading fusion has successfully fired.
+  // The chi2 gate for subsequent fusions is only applied once this is true.
+  // Without this guard, update_distance_traveled() sets heading_validated_=true
+  // at 5m (before the 7.5m baseline needed for a reliable bearing), causing
+  // the chi2 gate to reject the very first heading fusion when the initial
+  // heading error exceeds ~75 degrees.
+  bool   gps_track_hdg_fused_ = false;
 
   void predict_to(double timestamp_seconds);
   bool apply_gnss_update(double timestamp_seconds, const sensors::GnssFix& fix);

@@ -5,20 +5,27 @@
 
 namespace fusioncore {
 
-// Full 22-dimensional state vector:
+// Full 23-dimensional state vector:
 // [x, y, z,                    -- position (meters, ENU frame)
 //  qw, qx, qy, qz,            -- orientation (unit quaternion, body-to-world)
 //  vx, vy, vz,                 -- linear velocity (m/s, body frame)
 //  wx, wy, wz,                 -- angular velocity (rad/s, body frame)
 //  ax, ay, az,                 -- linear acceleration (m/s², body frame)
 //  b_gx, b_gy, b_gz,           -- gyroscope bias (rad/s)
-//  b_ax, b_ay, b_az]           -- accelerometer bias (m/s²)
+//  b_ax, b_ay, b_az,           -- accelerometer bias (m/s²)
+//  b_ewz]                      -- encoder angular velocity Z bias (rad/s)
 //
 // Quaternion convention: q = [qw, qx, qy, qz], |q| = 1.
 // Rotation: v_world = R(q) * v_body.
 // Initial value must be [1, 0, 0, 0] (identity), NOT zero.
+//
+// B_EWZ is the systematic WZ bias of the wheel encoder (differential drive).
+// It is estimated online through the GPS track heading cross-covariance:
+// encoder WZ bias -> integrated into heading -> observed via GPS bearing.
+// During GPS blackouts, the filter subtracts this estimated bias instead of
+// accumulating it as heading error. Mirrors exactly how B_GZ is handled for IMU.
 
-constexpr int STATE_DIM = 22;
+constexpr int STATE_DIM = 23;
 
 // State indices: use these everywhere, never raw numbers
 enum StateIndex {
@@ -28,7 +35,8 @@ enum StateIndex {
   WX = 10, WY = 11, WZ = 12,
   AX = 13, AY = 14, AZ = 15,
   B_GX = 16, B_GY = 17, B_GZ = 18,
-  B_AX = 19, B_AY = 20, B_AZ = 21
+  B_AX = 19, B_AY = 20, B_AZ = 21,
+  B_EWZ = 22  // encoder WZ bias: estimated from GPS heading, subtracted during blackouts
 };
 
 using StateVector = Eigen::Matrix<double, STATE_DIM, 1>;
@@ -91,12 +99,13 @@ struct State {
   double vel_x()        const { return x[VX]; }
   double vel_y()        const { return x[VY]; }
   double vel_z()        const { return x[VZ]; }
-  double gyro_bias_x()  const { return x[B_GX]; }
-  double gyro_bias_y()  const { return x[B_GY]; }
-  double gyro_bias_z()  const { return x[B_GZ]; }
-  double accel_bias_x() const { return x[B_AX]; }
-  double accel_bias_y() const { return x[B_AY]; }
-  double accel_bias_z() const { return x[B_AZ]; }
+  double gyro_bias_x()       const { return x[B_GX]; }
+  double gyro_bias_y()       const { return x[B_GY]; }
+  double gyro_bias_z()       const { return x[B_GZ]; }
+  double accel_bias_x()      const { return x[B_AX]; }
+  double accel_bias_y()      const { return x[B_AY]; }
+  double accel_bias_z()      const { return x[B_AZ]; }
+  double encoder_wz_bias()   const { return x[B_EWZ]; }
 
   // Euler angles derived from quaternion (for display/logging only)
   double roll()  const { double r, p, y; quat_to_euler(x[QW],x[QX],x[QY],x[QZ],r,p,y); return r; }

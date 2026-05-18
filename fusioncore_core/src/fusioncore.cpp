@@ -114,6 +114,10 @@ void FusionCore::init(const State& initial_state, double timestamp_seconds) {
   distance_traveled_ = 0.0;
   last_gnss_x_       = 0.0;
   last_gnss_y_       = 0.0;
+  hdg_fix_set_          = false;
+  last_hdg_fix_x_       = 0.0;
+  last_hdg_fix_y_       = 0.0;
+  gps_track_hdg_fused_  = false;
 
   // Reset snapshot buffer
   snapshot_buffer_.clear();
@@ -124,6 +128,7 @@ void FusionCore::init(const State& initial_state, double timestamp_seconds) {
   gnss_in_coast_            = false;
   gnss_in_recovery_         = false;
   ukf_.set_position_noise_scale(1.0);
+  ukf_.set_gyro_bias_noise_scale(1.0);
 
   // Initialize adaptive noise matrices
   init_adaptive_R();
@@ -140,12 +145,17 @@ void FusionCore::reset() {
   heading_source_    = HeadingSource::NONE;
   gnss_pos_set_      = false;
   distance_traveled_ = 0.0;
+  hdg_fix_set_          = false;
+  last_hdg_fix_x_       = 0.0;
+  last_hdg_fix_y_       = 0.0;
+  gps_track_hdg_fused_  = false;
   snapshot_buffer_.clear();
   imu_buffer_.clear();
   gnss_consecutive_rejects_ = 0;
   gnss_in_coast_            = false;
   gnss_in_recovery_         = false;
   ukf_.set_position_noise_scale(1.0);
+  ukf_.set_gyro_bias_noise_scale(1.0);
 }
 
 void FusionCore::save_snapshot() {
@@ -269,9 +279,9 @@ void FusionCore::predict_to(double timestamp_seconds) {
       !gnss_in_coast_ &&
       (timestamp_seconds - last_gnss_time_) > config_.gnss_coast_timeout_s)
   {
-    gnss_in_coast_    = true;
-    gnss_in_recovery_ = true;  // accept first returning fix unconditionally
+    gnss_in_coast_ = true;
     ukf_.set_position_noise_scale(config_.gnss_coast_q_factor);
+    ukf_.set_gyro_bias_noise_scale(config_.gnss_coast_q_bias_factor);
   }
 
   double dt = timestamp_seconds - last_timestamp_;
@@ -363,6 +373,14 @@ void FusionCore::update_imu(
 
   // Use adaptive R if initialized, else config default
   sensors::ImuNoiseMatrix R = adaptive_initialized_ ? R_imu_ : sensors::imu_noise_matrix(config_.imu);
+
+  // During GPS coast mode, inflate R[WZ,WZ] so the encoder WZ dominates heading
+  // rate estimation instead of the biased IMU gyro. The IMU still contributes to
+  // all other states (roll, pitch, accel, bias); only the yaw rate channel is
+  // de-weighted. This matches RL-EKF behavior: heading from odometry, not IMU.
+  if (gnss_in_coast_ && config_.gnss_coast_imu_wz_scale > 1.0) {
+    R(2, 2) *= config_.gnss_coast_imu_wz_scale;
+  }
 
   // Mahalanobis outlier rejection for IMU
   if (config_.outlier_rejection) {
@@ -614,7 +632,7 @@ void FusionCore::update_zupt(double timestamp_seconds, double noise_sigma) {
   R(1,1) = var;
   R(2,2) = var;
 
-  ukf_.update<sensors::ENCODER_DIM>(z, sensors::encoder_measurement_function, R);
+  ukf_.update<sensors::ENCODER_DIM>(z, sensors::zupt_measurement_function, R);
 }
 
 bool FusionCore::update_gnss(
@@ -674,6 +692,16 @@ bool FusionCore::apply_gnss_update(
   // Start with message covariance or HDOP-based estimate
   sensors::GnssPosNoiseMatrix R = sensors::gnss_pos_noise_matrix(config_.gnss, fix);
 
+  // Keep a copy of the raw measurement noise before adaptive inflation.
+  // Adaptive R captures temporal bias in GPS position (multipath, foliage) and
+  // is used to reduce Kalman gain when GPS is unreliable. But sigma_hdg for GPS
+  // track heading fusion is a geometric question (is the displacement long enough
+  // relative to GPS noise?), which should use the per-fix measurement noise, not
+  // the inflated adaptive noise. Using inflated R here would cause high-multipath
+  // sequences to stop fusing GPS heading entirely, leaving encoder WZ bias
+  // uncorrected for the rest of the mission.
+  sensors::GnssPosNoiseMatrix R_meas = R;
+
   // Inflate R toward the adaptive estimate once the window has enough data.
   // Only inflate: if GPS is actually good, R_gnss_ stays near message R and max() is a no-op.
   // When GPS is consistently biased (multipath, foliage), R_gnss_ reflects the true error
@@ -691,11 +719,7 @@ bool FusionCore::apply_gnss_update(
     : std::function<sensors::GnssPosMeasurement(const StateVector&)>(
         sensors::gnss_pos_measurement_function);
 
-  // Mahalanobis outlier rejection for GNSS position.
-  // Bypassed when in recovery mode: after a long blackout, dead-reckoning error
-  // can exceed 100m, which always fails the chi2 gate. The first fix after
-  // recovery is accepted unconditionally to snap the filter back to reality.
-  if (config_.outlier_rejection && !gnss_in_recovery_) {
+  if (config_.outlier_rejection) {
     sensors::GnssPosMeasurement innovation_pre;
     sensors::GnssPosNoiseMatrix S;
     ukf_.predict_measurement<sensors::GNSS_POS_DIM>(z, h_gnss, R, innovation_pre, S);
@@ -708,6 +732,16 @@ bool FusionCore::apply_gnss_update(
         if (gnss_consecutive_rejects_ >= config_.gnss_coast_n && !gnss_in_coast_) {
           gnss_in_coast_ = true;
           ukf_.set_position_noise_scale(config_.gnss_coast_q_factor);
+          ukf_.set_gyro_bias_noise_scale(config_.gnss_coast_q_bias_factor);
+        }
+        // When coast Q inflation alone isn't enough (filter drifted before the
+        // cascade started), inflate P[x,x] and P[y,y] directly. This fires once
+        // (== not >=) so the gate opens on the next fix via a proper Bayesian
+        // update, not a hard reset. Cross-covariances are untouched.
+        if (config_.gnss_recovery_rejection_n > 0 &&
+            gnss_consecutive_rejects_ == config_.gnss_recovery_rejection_n) {
+          double s2 = config_.gnss_p_inflate_sigma * config_.gnss_p_inflate_sigma;
+          ukf_.inflate_position_covariance(s2);
         }
       }
       return false;
@@ -718,38 +752,85 @@ bool FusionCore::apply_gnss_update(
   if (gnss_in_coast_) {
     gnss_in_coast_ = false;
     ukf_.set_position_noise_scale(1.0);
+    ukf_.set_gyro_bias_noise_scale(1.0);
   }
   gnss_consecutive_rejects_ = 0;
-
-  if (gnss_in_recovery_) {
-    // Direct position injection: a Kalman update with >100m innovation corrupts
-    // velocity via P cross-terms built up during coast mode Q inflation.
-    // Instead, snap position directly to the GPS fix and reset position
-    // uncertainty to GPS noise. Other states (orientation, velocity, biases)
-    // are left intact. The filter re-builds position cross-covariances naturally
-    // within a few GPS/encoder cycles.
-    gnss_in_recovery_ = false;
-    State s = ukf_.state();
-    s.x[X] = fix.x;
-    s.x[Y] = fix.y;
-    s.x[Z] = fix.z;
-    for (int i = 0; i < STATE_DIM; ++i) {
-      s.P(X, i) = s.P(i, X) = 0.0;
-      s.P(Y, i) = s.P(i, Y) = 0.0;
-      s.P(Z, i) = s.P(i, Z) = 0.0;
-    }
-    s.P(X, X) = R(0, 0);
-    s.P(Y, Y) = R(1, 1);
-    s.P(Z, Z) = R(2, 2);
-    ukf_.init(s);
-    return true;
-  }
 
   Eigen::Matrix<double, sensors::GNSS_POS_DIM, 1> innovation =
     ukf_.update<sensors::GNSS_POS_DIM>(z, h_gnss, R);
 
   // Track innovation for adaptive GNSS noise estimation
   adapt_R<sensors::GNSS_POS_DIM>(R_gnss_, R_gnss_floor_, gnss_innovations_, innovation, config_.adaptive_gnss);
+
+  // GPS track heading fusion: fuse the displacement bearing as a yaw update.
+  // This is the same mechanism navsat_transform uses for RL-EKF and directly
+  // corrects heading from GPS geometry rather than relying on gyro bias estimation.
+  // Displacement accumulates across multiple GPS fixes (using a separate reference
+  // position that only advances when a heading fusion fires) so the baseline is
+  // always large enough for the uncertainty to be meaningful.
+  if (config_.gps_track_heading_enabled) {
+    if (!hdg_fix_set_) {
+      // Initialize reference on first accepted fix; no heading yet.
+      last_hdg_fix_x_ = fix.x;
+      last_hdg_fix_y_ = fix.y;
+      hdg_fix_set_    = true;
+    } else {
+      double dx   = fix.x - last_hdg_fix_x_;
+      double dy   = fix.y - last_hdg_fix_y_;
+      double dist = std::sqrt(dx*dx + dy*dy);
+
+      if (dist >= config_.gps_track_heading_min_dist) {
+        double sigma_xy  = std::sqrt((R_meas(0,0) + R_meas(1,1)) * 0.5);
+        double sigma_hdg = sigma_xy / dist;
+
+        if (sigma_hdg <= config_.gps_track_heading_max_sigma) {
+          sensors::GnssHdgMeasurement z_hdg;
+          z_hdg[0] = std::atan2(dy, dx);
+
+          sensors::GnssHdgNoiseMatrix R_hdg;
+          R_hdg(0,0) = sigma_hdg * sigma_hdg;
+
+          constexpr unsigned int HDG_ANGLE_DIMS = 0b1;
+
+          // Apply chi2 gate only after this fusion has fired at least once.
+          // update_distance_traveled() sets heading_validated_=true at 5m (before
+          // the 7.5m baseline needed for a reliable bearing), so heading_validated_
+          // alone is not a safe guard. A large initial heading error (>75 deg)
+          // would then cause every fusion attempt to be rejected, permanently
+          // blocking heading correction.
+          bool fuse = true;
+          if (config_.outlier_rejection && gps_track_hdg_fused_) {
+            sensors::GnssHdgMeasurement innov_pre;
+            sensors::GnssHdgNoiseMatrix S_pre;
+            ukf_.predict_measurement<sensors::GNSS_HDG_DIM>(
+              z_hdg, sensors::gnss_hdg_measurement_function, R_hdg, innov_pre, S_pre, HDG_ANGLE_DIMS);
+            fuse = !is_outlier<sensors::GNSS_HDG_DIM>(innov_pre, S_pre, config_.outlier_threshold_hdg);
+          }
+
+          if (fuse) {
+            ukf_.update<sensors::GNSS_HDG_DIM>(
+              z_hdg, sensors::gnss_hdg_measurement_function, R_hdg, HDG_ANGLE_DIMS);
+            gps_track_hdg_fused_ = true;
+
+            if (!heading_validated_) {
+              heading_validated_ = true;
+              heading_source_    = HeadingSource::GPS_TRACK;
+            }
+          }
+
+          // Advance reference only when sigma was acceptable. If sigma was too
+          // high (distance not large enough relative to GPS noise), do NOT
+          // advance — let the displacement keep accumulating until the baseline
+          // is long enough for a reliable heading. With NCLT GPS (σ=3m) and
+          // max_sigma=0.4 rad, fusion first fires at ~7.5m of displacement.
+          last_hdg_fix_x_ = fix.x;
+          last_hdg_fix_y_ = fix.y;
+        }
+        // else: sigma too high, keep accumulating displacement
+      }
+    }
+  }
+
   return true;
 }
 

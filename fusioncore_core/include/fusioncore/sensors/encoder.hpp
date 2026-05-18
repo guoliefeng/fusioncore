@@ -24,13 +24,28 @@ struct EncoderParams {
   double vel_noise_wz = 0.02;
 };
 
-// h(x): maps state vector to expected encoder measurement
-// Encoders measure body-frame velocity directly
+// h(x): maps state vector to expected encoder measurement.
+// Encoder WZ reading = true body WZ + encoder WZ bias (B_EWZ).
+// Mirrors the IMU measurement function which adds B_GZ to WZ.
+// This allows the UKF to estimate and subtract the encoder WZ bias online,
+// so that heading drift during GPS blackouts is eliminated rather than accumulated.
 inline EncoderMeasurement encoder_measurement_function(const StateVector& x) {
   EncoderMeasurement z;
-  z[0] = x[VX];          // forward velocity
-  z[1] = x[VY];          // lateral velocity (zero for diff drive)
-  z[2] = x[WZ];  // encoder yaw rate maps to angular velocity state; gyro bias only in IMU measurement function
+  z[0] = x[VX];            // forward velocity (assume no VX encoder bias)
+  z[1] = x[VY];            // lateral velocity
+  z[2] = x[WZ] + x[B_EWZ]; // encoder WZ reading = body WZ + encoder WZ bias
+  return z;
+}
+
+// h(x): maps state vector to true body velocities (no encoder bias terms).
+// Used for ZUPT: the assertion is that the BODY is not moving (true WZ = 0),
+// not that the encoder reads zero. Fusing with encoder_measurement_function
+// would incorrectly assert WZ = -B_EWZ instead of WZ = 0.
+inline EncoderMeasurement zupt_measurement_function(const StateVector& x) {
+  EncoderMeasurement z;
+  z[0] = x[VX];   // true body VX
+  z[1] = x[VY];   // true body VY
+  z[2] = x[WZ];   // true body WZ (no bias term)
   return z;
 }
 

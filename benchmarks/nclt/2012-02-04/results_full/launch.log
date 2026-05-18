@@ -1,0 +1,123 @@
+[INFO] [launch]: All log files can be found below /home/manankharwar/.ros/log/2026-05-15-14-34-46-249477-DESKTOP-SE199PS-42343
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [launch.user]: Starting NCLT benchmark...
+[INFO] [nclt_player.py-1]: process started with pid [42395]
+[INFO] [static_transform_publisher-2]: process started with pid [42396]
+[INFO] [static_transform_publisher-3]: process started with pid [42397]
+[INFO] [fusioncore_node-4]: process started with pid [42398]
+[INFO] [ekf_node-5]: process started with pid [42399]
+[INFO] [navsat_transform_node-6]: process started with pid [42400]
+[static_transform_publisher-2] [INFO] [1778870089.125258185] [imu_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-2] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-2] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-2] from 'base_link' to 'imu_link'
+[static_transform_publisher-3] [INFO] [1778870089.125258092] [gps_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-3] translation: ('0.000000', '0.000000', '0.300000')
+[static_transform_publisher-3] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-3] from 'base_link' to 'gnss_link'
+[ekf_node-5] [INFO] [1778870089.279955649] [rl_ekf]: Waiting for clock to start...
+[navsat_transform_node-6] [INFO] [1778870089.653578278] [navsat_transform]: Waiting for clock to start...
+[fusioncore_node-4] [INFO] [1778870089.859860028] [fusioncore]: FusionCore node created
+[fusioncore_node-4] [INFO] [1778870092.079051333] [fusioncore]: Configuring FusionCore...
+[fusioncore_node-4] [INFO] [1778870092.084659503] [fusioncore]: IMU gravity removal: disabled
+[fusioncore_node-4] [INFO] [1778870092.084714133] [fusioncore]: GNSS min_fix_type: 1 (1=GPS, 2=DGPS, 3=RTK_FLOAT, 4=RTK_FIXED)
+[fusioncore_node-4] [INFO] [1778870092.183296353] [fusioncore]: PROJ: transform ready (EPSG:4326 → EPSG:4978)
+[fusioncore_node-4] [INFO] [1778870092.183408583] [fusioncore]: PROJ: using first GPS fix as local reference origin
+[fusioncore_node-4] [INFO] [1778870092.292374643] [fusioncore]: Dual antenna heading disabled.
+[fusioncore_node-4] [INFO] [1778870092.292436293] [fusioncore]: FusionCore configured. base_frame=base_link odom_frame=odom rate=100Hz
+[fusioncore_node-4] [INFO] [1778870092.297877243] [fusioncore]: Activating FusionCore...
+[fusioncore_node-4] [INFO] [1778870092.297930793] [fusioncore]: --- TF Validation ---
+[nclt_player.py-1] [INFO] [1778870092.492455983] [nclt_player]: Loading NCLT data from: /mnt/c/Users/Admin/ROS/ROS/fusioncore/benchmarks/nclt/2012-02-04/raw files
+[fusioncore_node-4] [INFO] [1778870092.521119003] [fusioncore]:   [OK]      imu_link -> base_link
+[fusioncore_node-4] [INFO] [1778870092.521203963] [fusioncore]: ---------------------
+[fusioncore_node-4] [INFO] [1778870092.668469163] [fusioncore]: FusionCore active. Listening for sensors.
+[INFO] [ros2-7]: process started with pid [42576]
+[nclt_player.py-1] [INFO] [1778870094.215840603] [nclt_player]:   Euler: 223991 rows from ms25_euler.csv
+[ros2-7] [WARN] [ros2bag]: Positional "topics" argument deprecated. Please use optional "--topics" argument instead.
+[ros2-7] stdin is not a terminal device. Keyboard handling disabled.[INFO] [1778870098.542035933] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[ros2-7] [INFO] [1778870098.542360743] [rosbag2_recorder]: Event publisher thread: Started
+[ros2-7] [INFO] [1778870098.565487053] [rosbag2_recorder]: Starting recording to '/mnt/c/Users/Admin/ROS/ROS/fusioncore/benchmarks/nclt/2012-02-04/bag_full'
+[ros2-7] [INFO] [1778870099.168659583] [rosbag2_recorder]: Subscribed to topic '/gnss/fix'
+[ros2-7] [INFO] [1778870099.628702593] [rosbag2_recorder]: Subscribed to topic '/fusion/odom'
+[nclt_player.py-1] [INFO] [1778870099.709377963] [nclt_player]:   IMU:  223991 rows from ms25.csv
+[ros2-7] [INFO] [1778870099.769595433] [rosbag2_recorder]: Subscribed to topic '/clock'
+[ros2-7] [INFO] [1778870099.770721783] [rosbag2_recorder]: Listening for topics...
+[ros2-7] [INFO] [1778870099.770809353] [rosbag2_recorder]: Recording...
+[ros2-7] [INFO] [1778870099.770915373] [rosbag2_recorder]: Topics discovery started.
+[nclt_player.py-1] [INFO] [1778870100.037707503] [nclt_player]:   GPS:  18808 fixes (12991 no-fix skipped)
+[nclt_player.py-1] [INFO] [1778870105.170561493] [nclt_player]:   Odom: 508473 velocity estimates from odometry_mu_100hz.csv
+[nclt_player.py-1] [INFO] [1778870105.419914863] [nclt_player]: Loaded 751272 events  (223991 IMU, 18808 GPS, 508473 odom)  rate=3.0x
+[fusioncore_node-4] [INFO] [1778870105.421584723] [fusioncore]: Filter initialized at t=1328389903.964 (first IMU)
+[fusioncore_node-4] [INFO] [1778870105.453571443] [fusioncore]: GNSS reference set: lat=42.293915 lon=-83.708315
+[fusioncore_node-4] [INFO] [1778870105.453732813] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[navsat_transform_node-6] [ERROR] [1778870105.586593333] [navsat_transform]: Latitude 42.2939d more than 20d from N pole
+[navsat_transform_node-6] [ERROR] [1778870105.639025443] [navsat_transform]: Latitude 42.2939d more than 20d from N pole
+[navsat_transform_node-6] [INFO] [1778870105.641967003] [navsat_transform]: Datum (latitude, longitude, altitude) is (42.29, -83.71, 0.00)
+[navsat_transform_node-6] [INFO] [1778870105.642034323] [navsat_transform]: Datum UTM coordinate is (17 north, 276727.74, 4685962.19)
+[navsat_transform_node-6] [INFO] [1778870105.642149433] [navsat_transform]: Corrected for magnetic declination of 0, user-specified offset of 0 and meridian convergence of -0.0318225. Transform heading factor is now -0.0318225
+[ros2-7] [INFO] [1778870106.060873173] [rosbag2_recorder]: Subscribed to topic '/rl/odometry'
+[ros2-7] [INFO] [1778870106.060934913] [rosbag2_recorder]: All requested topics are subscribed. Stopping discovery...
+[ros2-7] [INFO] [1778870106.060948413] [rosbag2_recorder]: Topics discovery stopped.
+[fusioncore_node-4] [INFO] [1778870107.172100923] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1778870108.902089383] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1778870113.668418755] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[ekf_node-5] [ERROR] [1778870113.705638717] [rl_ekf]: Failed to meet update rate! Took 0.059721999999999997311seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [INFO] [1778870115.458480044] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1778870117.124704953] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 0.0m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [INFO] [1778870118.795284091] [fusioncore]: Heading not yet validated: lever arm inactive. Distance traveled: 2.7m (need 5.0m), or provide dual antenna / IMU orientation.
+[fusioncore_node-4] [WARN] [1778870494.392196249] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1778870529.692824206] [rl_ekf]: Failed to meet update rate! Took 0.080115000000000005653seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1778870537.176102208] [rl_ekf]: Failed to meet update rate! Took 0.05194900000000000212seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1778870543.748938660] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870545.426473767] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870547.095607411] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870548.823005098] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870550.548155914] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870552.286164724] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870563.749441120] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870572.696713062] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870587.423721988] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870679.008081893] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870684.071838220] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778870706.669388931] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[ekf_node-5] [ERROR] [1778870723.162714534] [rl_ekf]: Failed to meet update rate! Took 0.050231999999999998874seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[ekf_node-5] [ERROR] [1778870734.320411663] [rl_ekf]: Failed to meet update rate! Took 0.050197999999999999565seconds. Try decreasing the rate, limiting sensor output frequency, or limiting the number of sensors.
+[fusioncore_node-4] [WARN] [1778871046.439908885] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871049.601741365] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871080.972103268] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871150.480999497] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871152.214801084] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871222.123517866] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871223.797437766] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[fusioncore_node-4] [WARN] [1778871225.466934256] [fusioncore]: GNSS fix rejected (fix_type=1, min=1, hdop=3.00, quality check or Mahalanobis gate)
+[nclt_player.py-1] [INFO] [1778871829.446989226] [nclt_player]: Playback complete.
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT) again, ignoring...
+[navsat_transform_node-6] [INFO] [1778878856.368753261] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [static_transform_publisher-3]: process has finished cleanly [pid 42397]
+[INFO] [static_transform_publisher-2]: process has finished cleanly [pid 42396]
+[INFO] [ekf_node-5]: process has finished cleanly [pid 42399]
+[INFO] [navsat_transform_node-6]: process has finished cleanly [pid 42400]
+[static_transform_publisher-3] [INFO] [1778878856.369192710] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[static_transform_publisher-2] [INFO] [1778878856.369449153] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[fusioncore_node-4] [INFO] [1778878856.369890836] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ekf_node-5] [INFO] [1778878856.378127403] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ros2-7] [INFO] [1778878856.387975866] [rosbag2_recorder]: Pausing recording.
+[ros2-7] [INFO] [1778878856.395058441] [rosbag2_cpp]: Writing remaining messages from cache to the bag. It may take a while
+[ros2-7] [INFO] [1778878856.627921897] [rosbag2_recorder]: Recording stopped
+[ros2-7] [INFO] [1778878856.734976472] [rosbag2_recorder]: Event publisher thread: Exited
+[INFO] [fusioncore_node-4]: process has finished cleanly [pid 42398]
+[INFO] [ros2-7]: process has finished cleanly [pid 42576]
+[nclt_player.py-1] Traceback (most recent call last):
+[nclt_player.py-1]   File "/mnt/c/Users/Admin/ROS/ROS/fusioncore/install/fusioncore_datasets/lib/fusioncore_datasets/nclt_player.py", line 439, in <module>
+[nclt_player.py-1]     main()
+[nclt_player.py-1]   File "/mnt/c/Users/Admin/ROS/ROS/fusioncore/install/fusioncore_datasets/lib/fusioncore_datasets/nclt_player.py", line 435, in main
+[nclt_player.py-1]     rclpy.shutdown()
+[nclt_player.py-1]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/__init__.py", line 134, in shutdown
+[nclt_player.py-1]     _shutdown(context=context)
+[nclt_player.py-1]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/utilities.py", line 82, in shutdown
+[nclt_player.py-1]     context.shutdown()
+[nclt_player.py-1]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/context.py", line 129, in shutdown
+[nclt_player.py-1]     self.__context.shutdown()
+[nclt_player.py-1] rclpy._rclpy_pybind11.RCLError: failed to shutdown: rcl_shutdown already called on the given context, at ./src/rcl/init.c:333
+[ERROR] [nclt_player.py-1]: process has died [pid 42395, exit code 1, cmd '/mnt/c/Users/Admin/ROS/ROS/fusioncore/install/fusioncore_datasets/lib/fusioncore_datasets/nclt_player.py --ros-args -r __node:=nclt_player --params-file /tmp/launch_params_2ckc6w24'].

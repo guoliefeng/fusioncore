@@ -43,8 +43,13 @@ fusioncore:
     outlier_threshold_enc: 11.34    # chi2(3, 0.999)
     outlier_threshold_imu: 15.09    # chi2(6, 0.999)
     gnss.coast_n: 3                 # consecutive rejections before coast mode
-    gnss.coast_q_factor: 200.0      # Q_position multiplier during coast
+    gnss.coast_q_factor: 10.0       # Q_position multiplier during coast: enough for chi2 to accept genuine drift, small enough to reject extreme outliers
     gnss.coast_timeout_s: 30.0      # also coast if GPS silent for 30s (covers mode=2 outages)
+    gnss.coast_q_bias_factor: 100.0 # Q_gyro_bias multiplier during coast: fast bias estimation from encoder WZ
+    gnss.coast_imu_wz_scale: 500.0  # inflate R_imu[WZ] during coast: encoder WZ dominates heading, not the gyro whose Q_bias is inflated 100x
+    gnss.recovery_rejection_n: 0    # disabled: P inflation via recovery mode was causing outlier acceptance
+    gnss.p_inflate_sigma: 50.0      # unused (recovery_rejection_n=0)
+    gnss.recovery_timeout_s: 0.0    # disabled: chi2 gate with coast_q_factor=10 handles GPS recovery correctly
 
     adaptive.imu: true
     adaptive.encoder: true
@@ -58,8 +63,9 @@ fusioncore:
     ukf.q_velocity:    0.1
     ukf.q_angular_vel: 0.1
     ukf.q_acceleration: 1.0
-    ukf.q_gyro_bias:   1.0e-5
-    ukf.q_accel_bias:  1.0e-5
+    ukf.q_gyro_bias:        1.0e-5
+    ukf.q_accel_bias:       1.0e-5
+    ukf.q_encoder_wz_bias:  1.0e-7  # encoder WZ bias changes very slowly (mechanical)
 
     # PROJ: WGS84 lat/lon in, ECEF out (globally valid)
     input.gnss_crs: "EPSG:4326"
