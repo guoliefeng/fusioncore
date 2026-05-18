@@ -299,7 +299,7 @@ This parameter controls a tradeoff:
 - Too high (200+): P grows so large that even outlier GPS fixes (100-800m off) may pass chi2 during recovery
 - Too low (1.0-2.0): P may not grow enough for legitimate drift corrections to pass chi2 after long blackouts
 
-The NCLT benchmarks use `coast_q_factor: 10.0`. After a 194s blackout at this value, sigma_xy = 44m, which accepts drift corrections up to 178m but rejects outliers 840m off (chi2 = 357 >> threshold 16.27). After a 461s blackout, sigma_xy = 68m, which accepts drift corrections up to 274m.
+The NCLT benchmarks use `coast_q_factor: 10.0`. After the 228s first blackout in 2012-08-20, sigma_xy = 48m, which accepts drift corrections up to 193m but rejects outliers 840m off (chi2 = 306 >> threshold 16.27). After the 461s blackout in 2012-06-15, sigma_xy = 68m, which accepts drift corrections up to 274m.
 
 ---
 

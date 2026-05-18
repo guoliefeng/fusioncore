@@ -86,25 +86,25 @@ This is an active area of work. The gyro bias estimation during coast mode (coas
 
 ### 2012-08-20 (FC 98.3m, RL 10.6m)
 
-This is the hardest sequence in the dataset for GPS-based localization. The raw GPS stream contains **153 fixes that are 840m off the RTK ground truth** (visible in `gps.csv`, excluded from `gps_rtk.csv`). These outliers cluster at two specific time windows: the boundaries of two GPS blackouts at t=43min (194s blackout) and t=63min (171s blackout).
+This is the hardest sequence in the dataset for GPS-based localization. The raw GPS stream contains **105 mode-3 fixes that are 720-840m off the RTK ground truth** (visible in `gps.csv`, excluded from `gps_rtk.csv`). These outliers cluster in a 24-second window at the end of the second GPS blackout at t=66 min. The sequence has two blackouts: 228s at t=42.2 min and 211s at t=62.5 min.
 
 Per-minute trajectory analysis of the current run shows:
 
 | Time | FC error | Note |
 |---|---|---|
 | 0-42 min | 1-10 m | Normal GPS, both filters tracking correctly |
-| 43-46 min | spike to ~100m, recovers | First blackout boundary, outlier GPS cluster |
+| 43-46 min | spike to ~100m, recovers | First blackout (228s): GPS errors up to ~70m at boundary |
 | 47-62 min | 3-10 m | Full recovery, GPS tracking correctly |
-| 63-67 min | spike to ~788m, recovers | Second blackout boundary, 840m outlier GPS cluster |
+| 63-67 min | spike to ~788m, recovers | Second blackout (211s): 105 fixes 720-840m off RTK at t=66 min |
 | 68-82 min | 5-10 m | Full recovery for remaining 15 minutes |
 
 The 98m ATE RMSE comes almost entirely from those two 2-3 minute transients. Outside those windows FC tracks at 5-10m, comparable to RL-EKF.
 
-The root cause: FusionCore's coast mode inflates `Q_position` during GPS absence to keep the chi2 gate permissive for genuine drift correction on return. With the current `coast_q_factor=10`, position uncertainty after a 171s blackout is sigma_xy~44m. An 840m outlier produces chi2=357, which is strongly rejected. However, the outlier GPS cluster arrives precisely at the end of the blackout before a short ramp-back to correct GPS, and the filter's position prediction after 170s of dead-reckoning may not be accurate enough to reject intermediate outliers under all configurations tested.
+The root cause: FusionCore's coast mode inflates `Q_position` during GPS absence to keep the chi2 gate permissive for genuine drift correction on return. With the current `coast_q_factor=10`, position uncertainty after a 211s blackout is sigma_xy~46m. An 840m outlier produces chi2=333, which is strongly rejected. However, the outlier GPS cluster arrives precisely at the end of the blackout before a short ramp-back to correct GPS, and the filter's position prediction after 211s of dead-reckoning may not be accurate enough to reject intermediate outliers under all configurations tested.
 
 RL-EKF avoids this because it does not inflate process noise during GPS absence, keeping P small and chi2 tighter. It also operates with navsat_transform which may filter some outliers before they reach the EKF.
 
-**This is an active investigation.** The specific challenge is that `coast_q_factor` controls a tradeoff: too high and outliers slip through chi2; too low and valid corrective fixes are rejected after genuine drift. The 2012-08-20 GPS outlier pattern (outliers clustered exactly at blackout boundaries) is particularly adversarial for any chi2-based gating scheme.
+**This is an active investigation.** The specific challenge is that `coast_q_factor` controls a tradeoff: too high and outliers slip through chi2; too low and valid corrective fixes are rejected after genuine drift. The 2012-08-20 GPS outlier pattern (outliers clustered exactly at a blackout boundary) is particularly adversarial for any chi2-based gating scheme.
 
 ---
 

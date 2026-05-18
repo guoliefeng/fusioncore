@@ -109,8 +109,8 @@ fusioncore:
 
     gnss.coast_q_factor: 10.0
     # Q_position multiplier in coast mode. Controls how fast position uncertainty
-    # grows during the blackout. 10.0: after 194s, sigma_xy=44m (rejects 840m
-    # outliers, accepts 178m drift). After 461s, sigma_xy=68m (accepts 274m drift).
+    # grows during the blackout. 10.0: after 228s, sigma_xy=48m (rejects 840m
+    # outliers, accepts 193m drift). After 461s, sigma_xy=68m (accepts 274m drift).
 
     gnss.coast_timeout_s: 30.0
     # Also enter coast if GPS is silent this long (seconds). Handles outages

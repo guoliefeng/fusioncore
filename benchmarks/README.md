@@ -41,16 +41,16 @@ The lowest-density GPS sequence in the set (15,594 fixes vs 30,000-46,000 on oth
 
 ### 2012-08-20 (FC 98.3m, RL 10.6m)
 
-The raw GPS stream for this sequence contains 153 GPS fixes that are 840m off the RTK ground truth. These are excluded from `gps_rtk.csv` (the GT preprocessor rejects them) but are present in `gps.csv` as valid mode-3 fixes. They cluster at the ends of two GPS blackouts at t=43min (194s blackout) and t=63min (171s blackout).
+The raw GPS stream for this sequence contains 105 mode-3 GPS fixes that are 720-840m off the RTK ground truth. These are excluded from `gps_rtk.csv` (the GT preprocessor rejects them) but are present in `gps.csv` as valid mode-3 fixes. They cluster in a 24-second window at the end of the second GPS blackout (t=66 min). The sequence has two GPS blackouts: 228s at t=42.2 min and 211s at t=62.5 min.
 
 Per-minute trajectory analysis:
 
 | Time window | FC error | Status |
 |---|---|---|
 | 0 - 42 min | 1 - 10 m | Nominal GPS coverage |
-| 43 - 46 min | spike to ~100m, recovers in 2-3 min | First blackout boundary, outlier GPS cluster |
+| 43 - 46 min | spike to ~100m, recovers in 2-3 min | First blackout (228s): GPS errors up to ~70m at boundary |
 | 47 - 62 min | 3 - 10 m | Full recovery |
-| 63 - 67 min | spike to ~788m, recovers in 2 min | Second blackout boundary, 840m GPS outliers |
+| 63 - 67 min | spike to ~788m, recovers in 2 min | Second blackout (211s): 105 fixes 720-840m off RTK at boundary |
 | 68 - 82 min | 5 - 10 m | Full recovery for remaining 15 minutes |
 
 The 98m ATE RMSE is driven almost entirely by those two transients. Outside those windows FC achieves 5-10m, on par with RL-EKF. The tradeoff in `coast_q_factor` that determines chi2 relaxation during blackout recovery is the active area of investigation: this GPS outlier clustering pattern (outliers at exactly the blackout boundary) is adversarial for any chi2-based gating scheme.
