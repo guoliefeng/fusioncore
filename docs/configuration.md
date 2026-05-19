@@ -81,9 +81,16 @@ fusioncore:
     gnss.max_hdop: 4.0          # reject fixes with HDOP worse than this
     gnss.min_satellites: 4
     gnss.min_fix_type: 1        # 1=GPS, 2=DGPS, 3=RTK_FLOAT, 4=RTK_FIXED
-                                # NOTE: sensor_msgs/NavSatFix status=2 → RTK_FIXED only.
-                                # RTK_FLOAT (3) is unreachable via NavSatFix.
-                                # Use 2 or 4 as meaningful thresholds.
+                                # NavSatFix: status=2 maps to RTK_FIXED. RTK_FLOAT (3)
+                                # is unreachable via NavSatFix — use gnss.use_gps_fix
+                                # below if your receiver publishes gps_msgs/GPSFix.
+
+    gnss.use_gps_fix: false     # Set true when your driver publishes gps_msgs/GPSFix
+                                # on /gnss/fix instead of sensor_msgs/NavSatFix.
+                                # GPSFix unlocks RTK_FLOAT status, uses receiver-native
+                                # hdop/vdop values, satellites_used, and err_horz/err_vert
+                                # as a fallback covariance. Default false: NavSatFix works
+                                # with all receivers. See GPS Receiver Setup below.
 
     # Antenna lever arm: offset from base_link to GPS antenna in body frame
     # x=forward, y=left, z=up (meters). Leave 0.0 if antenna is above base_link.
@@ -394,6 +401,54 @@ output.crs: "EPSG:32617"
 output.convert_to_enu_at_reference: false
 reference.use_first_fix: true
 ```
+
+---
+
+## GPS receiver setup: NavSatFix vs GPSFix
+
+FusionCore supports two GPS message types on `/gnss/fix`. The default is `sensor_msgs/NavSatFix` because every ROS GPS driver publishes it. Set `gnss.use_gps_fix: true` to switch to `gps_msgs/GPSFix` if your driver supports it.
+
+| | `sensor_msgs/NavSatFix` | `gps_msgs/GPSFix` |
+|---|---|---|
+| Driver support | Universal | nmea_navsat_driver, ublox_dgnss, others |
+| RTK_FLOAT status | Not expressible | Yes (status 20) |
+| Separate HDOP / VDOP | No | Yes |
+| Satellites used | No | Yes |
+| 95% CI error bounds | No | err_horz / err_vert |
+| Covariance matrix | Yes | Yes |
+
+### When to use NavSatFix (default)
+
+NavSatFix works with all receivers. For most setups, leave `gnss.use_gps_fix: false`.
+
+The only thing you cannot get via NavSatFix is RTK_FLOAT. If you are using autonomous GPS (CEP 1-3m) or RTK fixed, NavSatFix is all you need.
+
+### When to use GPSFix
+
+Switch to `gnss.use_gps_fix: true` when:
+
+- Your receiver can output RTK_FLOAT and you want to fuse those fixes (better than autonomous, worse than RTK fixed). Set `gnss.min_fix_type: 3` to require it or allow it.
+- Your driver publishes receiver-native HDOP/VDOP rather than a covariance matrix, and you want those values used directly in the noise model.
+- Your driver sets `err_horz`/`err_vert` (95% CI bounds) and you prefer that over a synthetic covariance.
+
+```yaml
+fusioncore:
+  ros__parameters:
+    gnss.use_gps_fix: true
+    gnss.min_fix_type: 3      # require RTK_FLOAT or better (3=FLOAT, 4=FIXED)
+    gnss.base_noise_xy: 0.5   # metres: baseline at HDOP=1 for RTK_FLOAT
+    gnss.base_noise_z: 1.0
+```
+
+### Covariance priority (GPSFix)
+
+When `gnss.use_gps_fix: true`, FusionCore picks the best available covariance source in this order:
+
+1. `position_covariance_type == 3` (full 3x3): used directly, including off-diagonal terms.
+2. `position_covariance_type >= 1` (diagonal): diagonal elements used, hdop/vdop derived from them.
+3. `err_horz > 0` and `err_vert > 0`: 95% CI bounds converted to 1-sigma variance (divide by 1.96), used as a diagonal covariance.
+4. `hdop > 0` and `vdop > 0`: receiver-native DOP values used directly in the noise model (`sigma_xy = base_noise_xy * hdop`).
+5. Defaults (`hdop=1.5, vdop=2.0`).
 
 ---
 

@@ -7,7 +7,7 @@
 | `/imu/data` | `sensor_msgs/Imu` | Primary IMU angular velocity and linear acceleration |
 | `imu2.topic` | `sensor_msgs/Imu` | Second IMU (optional): fused as independent measurement of same state |
 | `/odom/wheels` | `nav_msgs/Odometry` | Wheel encoder velocity |
-| `/gnss/fix` | `sensor_msgs/NavSatFix` | GPS position (optional) |
+| `/gnss/fix` | `sensor_msgs/NavSatFix` or `gps_msgs/GPSFix` | GPS position (optional). Default is NavSatFix. Set `gnss.use_gps_fix: true` to subscribe as GPSFix: unlocks RTK_FLOAT status, receiver-native HDOP/VDOP, and err_horz/err_vert covariance bounds. |
 | `/gnss/heading` | `sensor_msgs/Imu` | Dual antenna heading (optional) |
 | `gnss.azimuth_topic` | `compass_msgs/Azimuth` | Azimuth heading (optional, preferred) |
 | `gnss.fix2_topic` | `sensor_msgs/NavSatFix` | Second GPS receiver (optional) |

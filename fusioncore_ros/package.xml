@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>fusioncore_ros</name>
-  <version>0.2.4</version>
+  <version>0.2.5</version>
   <description>ROS 2 UKF sensor fusion for IMU, wheel encoders, GPS, and visual SLAM pose. 22-state filter with ECEF-native GPS handling, automatic IMU bias estimation, adaptive noise covariance, chi-squared outlier rejection on every sensor, and map reinitialization recovery for GPS-denied operation. Drop-in robot_localization alternative. Native ROS 2 Jazzy, benchmarked on 6 NCLT public dataset sequences.</description>
   <maintainer email="manan.kharwar@ansys.com">Manan Kharwar</maintainer>
   <license>Apache-2.0</license>
@@ -16,6 +16,7 @@
 
   <depend>rosidl_default_runtime</depend>
   <depend>geographic_msgs</depend>
+  <depend>gps_msgs</depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 
   <depend>rclcpp</depend>

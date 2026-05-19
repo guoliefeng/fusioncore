@@ -8,6 +8,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.2.4]: 2026-05-19
 
+### Added
+- **`gps_msgs/GPSFix` support**: set `gnss.use_gps_fix: true` to subscribe to `/gnss/fix` as `gps_msgs/GPSFix` instead of `sensor_msgs/NavSatFix`. Unlocks RTK_FLOAT status (status code 20, unreachable via NavSatFix), uses receiver-native `hdop`/`vdop` fields, `satellites_used` for the quality gate, and `err_horz`/`err_vert` (95% CI bounds) as a fallback covariance source. Default is `false`; existing NavSatFix setups are unaffected.
+
 ### Changed
 - `package.xml` (both packages): maintainer name corrected to Manan Kharwar, maintainer email updated
 - `package.xml` (both packages): added `<url>` tags for website, repository, bugtracker, and documentation so index.ros.org renders clickable links

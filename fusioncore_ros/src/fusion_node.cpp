@@ -8,6 +8,7 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/nav_sat_status.hpp>
+#include <gps_msgs/msg/gps_fix.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.hpp>
@@ -149,6 +150,14 @@ public:
     // Set to empty string to disable (use sensor_msgs/Imu heading instead)
     declare_parameter("gnss.azimuth_topic", "");
 
+    // Subscribe to /gnss/fix as gps_msgs/GPSFix instead of sensor_msgs/NavSatFix.
+    // GPSFix carries RTK_FLOAT status (unreachable via NavSatFix), separate hdop/vdop
+    // from the receiver, satellites_used, and err_horz/err_vert position bounds.
+    // Required when your GNSS driver publishes gps_msgs/GPSFix (e.g. nmea_navsat_driver
+    // with fix_type=RTK_FLOAT or ublox_dgnss in GPSFix mode).
+    // Set false (default) to use sensor_msgs/NavSatFix: works with all receivers.
+    declare_parameter("gnss.use_gps_fix", false);
+
     // Antenna lever arm params: primary receiver
     declare_parameter("gnss.lever_arm_x", 0.0);
     declare_parameter("gnss.lever_arm_y", 0.0);
@@ -266,6 +275,7 @@ public:
     heading_topic_ = get_parameter("gnss.heading_topic").as_string();
     gnss2_topic_    = get_parameter("gnss.fix2_topic").as_string();
     azimuth_topic_  = get_parameter("gnss.azimuth_topic").as_string();
+    use_gps_fix_    = get_parameter("gnss.use_gps_fix").as_bool();
 
     fusioncore::FusionCoreConfig config;
 
@@ -540,12 +550,23 @@ public:
         "Radar Doppler velocity fusion enabled on topic: %s", radar_vel_topic_.c_str());
     }
 
-    gnss_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>(
-      "/gnss/fix", 10,
-      [this](const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
-        std::lock_guard<std::mutex> lock(fc_mutex_);
-        gnss_callback(msg, 0);
-      }, sensor_opts);
+    if (use_gps_fix_) {
+      gps_fix_sub_ = create_subscription<gps_msgs::msg::GPSFix>(
+        "/gnss/fix", 10,
+        [this](const gps_msgs::msg::GPSFix::SharedPtr msg) {
+          std::lock_guard<std::mutex> lock(fc_mutex_);
+          gps_fix_callback(msg, 0);
+        }, sensor_opts);
+      RCLCPP_INFO(get_logger(),
+        "GNSS: using gps_msgs/GPSFix on /gnss/fix (RTK_FLOAT capable)");
+    } else {
+      gnss_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>(
+        "/gnss/fix", 10,
+        [this](const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
+          std::lock_guard<std::mutex> lock(fc_mutex_);
+          gnss_callback(msg, 0);
+        }, sensor_opts);
+    }
 
     // compass_msgs/Azimuth heading: optional, preferred over sensor_msgs/Imu
     if (!azimuth_topic_.empty()) {
@@ -769,6 +790,7 @@ public:
     gnss_vel_sub_.reset();
     radar_vel_sub_.reset();
     gnss_sub_.reset();
+    gps_fix_sub_.reset();
     gnss2_sub_.reset();
     gnss_heading_sub_.reset();
     azimuth_sub_.reset();
@@ -1664,6 +1686,174 @@ private:
     }
   }
 
+  // ─── GPSFix callback ──────────────────────────────────────────────────────
+  // Handles gps_msgs/GPSFix when gnss.use_gps_fix: true.
+  // Advantages over NavSatFix:
+  //   - RTK_FLOAT status (status 20) is expressible; NavSatFix can only reach RTK_FIXED.
+  //   - Receiver-native hdop/vdop fields for direct DOP-scaled noise.
+  //   - satellites_used for the quality gate.
+  //   - err_horz/err_vert (95% CI bounds) as a fallback covariance source.
+
+  void gps_fix_callback(const gps_msgs::msg::GPSFix::SharedPtr msg, int source_id = 0)
+  {
+    if (source_id == 0) mark_sensor_received("GNSS");
+    else                mark_sensor_received("GNSS2");
+    if (!fc_->is_initialized()) return;
+
+    if (msg->status.status < 0) return;
+
+    double t = rclcpp::Time(msg->header.stamp).seconds();
+
+    fusioncore::sensors::LLAPoint lla;
+    lla.lat_rad = msg->latitude  * M_PI / 180.0;
+    lla.lon_rad = msg->longitude * M_PI / 180.0;
+    lla.alt_m   = msg->altitude;
+
+    fusioncore::sensors::ECEFPoint ecef;
+    gnss_to_output(lla, ecef);
+
+    if (!gnss_ref_set_) {
+      gnss_ref_lla_  = lla;
+      gnss_ref_ecef_ = ecef;
+      gnss_ref_set_  = true;
+      RCLCPP_INFO(get_logger(), "GNSS reference set (GPSFix): lat=%.6f lon=%.6f",
+        msg->latitude, msg->longitude);
+    }
+
+    {
+      double dx = ecef.x - gnss_ref_ecef_.x;
+      double dy = ecef.y - gnss_ref_ecef_.y;
+      double dz = ecef.z - gnss_ref_ecef_.z;
+      if (std::sqrt(dx*dx + dy*dy + dz*dz) > 10000.0) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+          "GPSFix dropped: more than 10km from reference (hardware glitch)");
+        return;
+      }
+    }
+
+    Eigen::Vector3d enu;
+    if (convert_to_enu_at_reference_) {
+      enu = fusioncore::sensors::ecef_to_enu(ecef, gnss_ref_ecef_, gnss_ref_lla_);
+    } else {
+      enu = Eigen::Vector3d(ecef.x - gnss_ref_ecef_.x,
+                            ecef.y - gnss_ref_ecef_.y,
+                            ecef.z - gnss_ref_ecef_.z);
+    }
+
+    fusioncore::sensors::GnssFix fix;
+    fix.x = enu[0];
+    fix.y = enu[1];
+    fix.z = enu[2];
+    fix.source_id = source_id;
+    fix.lever_arm = (source_id == 0) ? gnss_lever_arm_ : gnss_lever_arm2_;
+
+    // gps_msgs/GPSStatus constants:
+    //   STATUS_NO_FIX=-1, STATUS_FIX=0, STATUS_SBAS_FIX=1, STATUS_GBAS_FIX=2
+    //   STATUS_DGPS_FIX=18, STATUS_RTK_FIX=19, STATUS_RTK_FLOAT=20
+    using S = gps_msgs::msg::GPSStatus;
+    switch (msg->status.status) {
+      case S::STATUS_RTK_FIX:
+        fix.fix_type = fusioncore::sensors::GnssFixType::RTK_FIXED; break;
+      case S::STATUS_RTK_FLOAT:
+        fix.fix_type = fusioncore::sensors::GnssFixType::RTK_FLOAT; break;
+      case S::STATUS_GBAS_FIX:
+        fix.fix_type = fusioncore::sensors::GnssFixType::RTK_FIXED; break;
+      case S::STATUS_DGPS_FIX:
+      case S::STATUS_SBAS_FIX:
+        fix.fix_type = fusioncore::sensors::GnssFixType::DGPS_FIX; break;
+      default:
+        fix.fix_type = fusioncore::sensors::GnssFixType::GPS_FIX; break;
+    }
+
+    // satellites_used is directly available in GPSFix (NavSatFix has no equivalent).
+    fix.satellites = (msg->status.satellites_used > 0)
+      ? static_cast<int>(msg->status.satellites_used) : 4;
+
+    // Covariance priority:
+    //   1. Full 3x3 from position_covariance_type==3 (most accurate)
+    //   2. Diagonal from position_covariance_type>=1
+    //   3. err_horz/err_vert (95% CI from receiver): construct a diagonal covariance
+    //   4. Receiver hdop/vdop: actual DOP values, scale with base_noise in the core
+    //   5. Defaults
+
+    constexpr double kMinVarXY = 4e-4;   // sigma = 0.02 m
+    constexpr double kMinVarZ  = 2.5e-3; // sigma = 0.05 m
+
+    if (msg->position_covariance_type == gps_msgs::msg::GPSFix::COVARIANCE_TYPE_KNOWN) {
+      Eigen::Matrix3d cov;
+      for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+          cov(i, j) = msg->position_covariance[i*3 + j];
+      if (cov(0,0) > 0.0 && cov(1,1) > 0.0 && cov(2,2) > 0.0) {
+        if (cov(0,0) < kMinVarXY) cov(0,0) = kMinVarXY;
+        if (cov(1,1) < kMinVarXY) cov(1,1) = kMinVarXY;
+        if (cov(2,2) < kMinVarZ)  cov(2,2) = kMinVarZ;
+        fix.has_full_covariance = true;
+        fix.full_covariance = cov;
+        fix.hdop = std::sqrt((cov(0,0) + cov(1,1)) / 2.0);
+        fix.vdop = std::sqrt(cov(2,2));
+      } else {
+        fix.hdop = 1.5;
+        fix.vdop = 2.0;
+      }
+    } else if (msg->position_covariance_type >= gps_msgs::msg::GPSFix::COVARIANCE_TYPE_APPROXIMATED) {
+      double var_xy = (msg->position_covariance[0] + msg->position_covariance[4]) / 2.0;
+      if (var_xy < kMinVarXY) var_xy = kMinVarXY;
+      double var_z = msg->position_covariance[8];
+      if (var_z < kMinVarZ) var_z = kMinVarZ;
+      if (var_xy > 0.0 && var_z > 0.0) {
+        fix.hdop = std::sqrt(var_xy);
+        fix.vdop = std::sqrt(var_z);
+      } else {
+        fix.hdop = 1.5;
+        fix.vdop = 2.0;
+      }
+    } else if (msg->err_horz > 0.0 && msg->err_vert > 0.0) {
+      // err_horz/err_vert are 95% CI bounds in meters. Convert to 1-sigma variance.
+      double sigma_xy = msg->err_horz / 1.96;
+      double sigma_z  = msg->err_vert / 1.96;
+      double var_xy = sigma_xy * sigma_xy;
+      double var_z  = sigma_z  * sigma_z;
+      if (var_xy < kMinVarXY) var_xy = kMinVarXY;
+      if (var_z  < kMinVarZ)  var_z  = kMinVarZ;
+      Eigen::Matrix3d cov = Eigen::Matrix3d::Zero();
+      cov(0,0) = var_xy;
+      cov(1,1) = var_xy;
+      cov(2,2) = var_z;
+      fix.has_full_covariance = true;
+      fix.full_covariance = cov;
+      fix.hdop = std::sqrt(var_xy);
+      fix.vdop = std::sqrt(var_z);
+    } else if (msg->hdop > 0.0 && msg->vdop > 0.0) {
+      // Receiver-native dimensionless DOP: used directly by the core noise model
+      // (sigma_xy = base_noise_xy * hdop, sigma_z = base_noise_z * vdop).
+      fix.hdop = msg->hdop;
+      fix.vdop = msg->vdop;
+    } else {
+      fix.hdop = 1.5;
+      fix.vdop = 2.0;
+    }
+
+    bool accepted = fc_->update_gnss(t, fix);
+    if (!accepted) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
+        "GPSFix rejected (fix_type=%d, min=%d, hdop=%.2f, "
+        "quality check or Mahalanobis gate)",
+        static_cast<int>(fix.fix_type),
+        static_cast<int>(min_fix_type_),
+        fix.hdop);
+    }
+
+    auto fc_status = fc_->get_status();
+    if (!fc_status.heading_validated) {
+      RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 5000,
+        "Heading not yet validated: lever arm inactive. "
+        "Distance traveled: %.1fm (need %.1fm), or provide dual antenna / IMU orientation.",
+        fc_status.distance_traveled,
+        5.0);
+    }
+  }
+
   // ─── Dual antenna heading callback ────────────────────────────────────────
   // Fixes peci1 issue: dual antenna heading was in core C++ but not wired
   // to any ROS topic. Now subscribes to gnss.heading_topic.
@@ -2098,6 +2288,7 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr        gnss_vel_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr        radar_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr    gnss_sub_;
+  rclcpp::Subscription<gps_msgs::msg::GPSFix>::SharedPtr          gps_fix_sub_;
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr                gnss2_sub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr                       odom_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_pub_;
@@ -2112,6 +2303,7 @@ private:
   double      publish_rate_;
   bool        force_2d_    = false;
   bool        publish_tf_  = true;
+  bool        use_gps_fix_  = false;
   std::string heading_topic_;
   std::string gnss2_topic_;
   std::string azimuth_topic_;
