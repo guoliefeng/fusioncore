@@ -195,7 +195,7 @@ Confirm FusionCore is actually publishing:
 ros2 run tf2_ros tf2_echo odom base_link
 ```
 
-If transforms are printing, the error is a race condition at startup: the downstream node started before FusionCore. The `fusioncore_nav2.launch.py` launch file adds a 5-second delay before starting Nav2 to prevent this.
+If transforms are printing, the error is a race condition at startup: the downstream node started before FusionCore. The `fusioncore_nav2.launch.py` launch file adds an 8-second delay before starting Nav2 to prevent this.
 
 ---
 

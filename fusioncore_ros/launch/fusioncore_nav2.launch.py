@@ -75,8 +75,9 @@ def _launch_nav2(context, *args, **kwargs):
         }.items(),
     )
 
-    # 5 s gives FusionCore time to reach active and start publishing odom → base_link TF
-    return [TimerAction(period=5.0, actions=[nav2])]
+    # 8 s: FC activates and publishes TF by ~3 s, the extra 5 s lets bt_navigator's
+    # TF listener buffer warm up before configure runs (avoids a startup race on cold DDS)
+    return [TimerAction(period=8.0, actions=[nav2])]
 
 
 # ── Launch description ────────────────────────────────────────────────────────

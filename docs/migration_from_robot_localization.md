@@ -21,7 +21,7 @@ ros2 launch fusioncore_ros fusioncore_nav2.launch.py \
   fusioncore_config:=/path/to/your_robot.yaml
 ```
 
-That's it. FusionCore starts, configures itself, activates, and Nav2 comes up 5 seconds later once localization is publishing. No separate `navsat_transform_node`, no feedback loop, no topic wiring.
+That's it. FusionCore starts, configures itself, activates, and Nav2 comes up 8 seconds later once localization is publishing. No separate `navsat_transform_node`, no feedback loop, no topic wiring.
 
 **Don't use Nav2?** Use `fusioncore.launch.py` instead:
 
