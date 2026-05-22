@@ -44,6 +44,13 @@ markdown_extensions:
 
 plugins:
   - search
+  - blog:
+      blog_dir: blog
+      post_url_format: "{slug}"
+      archive: false
+      categories: false
+      authors: false
+      post_excerpt: required
 
 nav:
   - Home: index.md
@@ -61,6 +68,7 @@ nav:
   - How It Works: how-it-works.md
   - Troubleshooting: troubleshooting.md
   - Known Limitations: known-limitations.md
+  - Blog: blog/index.md
   - Reference:
     - Topics & TF: reference/topics.md
     - Benchmark Results: reference/benchmark.md
