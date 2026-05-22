@@ -102,6 +102,32 @@ The IMU bias window (`init.stationary_window`) hasn't settled before the robot s
 
 ---
 
+## Velocity drift or position error when IMU is tilted or robot is on a slope
+
+FusionCore handles this correctly without any configuration change.
+
+The accelerometer measures body acceleration plus gravity projected onto the sensor axes. When the IMU is tilted, gravity projects differently onto each axis. FusionCore's UKF measurement function models this explicitly: at every update step, it computes how much gravity should appear on each axis given the current quaternion estimate, and treats only the residual as signal. The filter knows exactly what the accelerometer should read at any orientation.
+
+robot_localization removes gravity as a preprocessing step before the filter sees the data. That step assumes the robot is level. On a slope or with a physically tilted IMU, the preprocessing subtracts the wrong gravity vector, the residual bleeds into the velocity estimate, and the error accumulates over time without a way to correct it.
+
+Because FusionCore carries the full quaternion in its state vector and the gravity projection is computed inside the measurement function at every update, tilt-induced drift self-corrects whenever the filter updates orientation (via GPS heading, magnetometer, or AHRS roll/pitch). There is no special slope mode or tilt compensation parameter to set.
+
+If you are seeing position drift on a tilted platform and the above does not resolve it, check:
+
+```bash
+ros2 topic echo /imu/data --field linear_acceleration --once
+```
+
+When the robot is stationary on a slope, the acceleration vector magnitude should still be close to 9.81 m/s², just pointing in a different direction. If the magnitude is near zero, your driver is publishing free acceleration (gravity already removed). In that case set:
+
+```yaml
+imu.remove_gravitational_acceleration: true
+```
+
+This tells FusionCore the driver has already removed gravity, so the measurement function uses the raw body acceleration instead.
+
+---
+
 ## Camera image not showing in RtabmapViz
 
 This is not a FusionCore issue. FusionCore publishes `/fusion/odom` and `odom → base_link` TF: it has no involvement in the camera pipeline.
