@@ -35,10 +35,20 @@ fusioncore:
     #   ~0.0 m/s² → set true (driver already removed it)
     # NOTE: opposite of robot_localization's imu0_remove_gravitational_acceleration.
 
-    imu.frame_id: ""  # override IMU TF frame. Leave empty to use msg header.frame_id.
-                      # Set when your simulator or IMU driver stamps messages with a
-                      # non-standard frame name (e.g. Gazebo Harmonic TurtleBot3 publishes
-                      # "waffle/imu_link/tb3_imu"). Set to your URDF frame name instead.
+    imu.frame_id: ""  # override IMU TF frame. Leave empty (default) to use msg->header.frame_id.
+                      #
+                      # When to set this:
+                      #   Gazebo Harmonic TurtleBot3 publishes "waffle/imu_link/tb3_imu" instead
+                      #   of "imu_link". FusionCore can't find that frame in the TF tree.
+                      #   Fix: set imu.frame_id to your URDF frame name (e.g. "imu_link").
+                      #
+                      # WARNING: do NOT set this to "base_link".
+                      #   When imu.frame_id equals base_frame, FusionCore skips the TF lookup
+                      #   entirely and treats IMU measurements as already in base_link frame.
+                      #   If your IMU is mounted at any angle relative to base_link, its
+                      #   measurements will be fused with the wrong rotation, silently
+                      #   corrupting the orientation estimate. Leave empty unless your driver
+                      #   publishes with no frame_id at all.
 
     # Optional second IMU. When non-empty, FusionCore subscribes to this topic
     # and fuses each message as an independent measurement of the same state.

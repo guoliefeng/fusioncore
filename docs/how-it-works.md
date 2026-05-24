@@ -366,11 +366,37 @@ FusionCore tracks the last update time for each sensor independently. If a senso
 
 ## Message covariances
 
+### Input covariances
+
 FusionCore uses the covariance values sensors actually publish rather than ignoring them:
 
 - GPS: full 3×3 matrix when `position_covariance_type == 3`
 - Wheel odometry: reads `twist.covariance` per-axis
 - IMU orientation: reads `orientation_covariance` from the message
+
+### Output covariance: pose.covariance
+
+FusionCore publishes `nav_msgs/Odometry` on `/fusion/odom`. The `pose.covariance` field is a 6×6 row-major matrix following the ROS convention: `[x, y, z, roll, pitch, yaw]`. The orientation block (rows and columns 3, 4, 5) must contain variances in Euler angle space, not quaternion component space.
+
+The UKF tracks orientation as a unit quaternion `(qw, qx, qy, qz)` and maintains a 23×23 covariance matrix P in quaternion space. Placing `P(QX,QX)`, `P(QY,QY)`, `P(QZ,QZ)` directly into the orientation block would be wrong: for a robot driving flat with a small yaw uncertainty σ_yaw, `qz = sin(yaw/2) ≈ yaw/2`, so `P(QZ,QZ) ≈ σ_yaw²/4`. Nav2 AMCL reads `pose.covariance[35]` as the yaw variance for particle resampling; it would receive a number four times too small at small angles and increasingly wrong as orientation changes.
+
+FusionCore instead computes the analytical 3×4 Jacobian `J = d(roll,pitch,yaw)/d(qw,qx,qy,qz)` at the current quaternion and propagates:
+
+```
+C_euler     = J · P_quat(4×4) · Jᵀ       ← 3×3 Euler angle covariance
+C_pos_euler = P_pos_quat(3×4) · Jᵀ       ← 3×3 position–Euler cross-covariance
+```
+
+The full 6×6 `pose.covariance` is then assembled as:
+
+```
+[ P_pos(3×3)       C_pos_euler(3×3) ]
+[ C_pos_euler(3×3)ᵀ  C_euler(3×3)  ]
+```
+
+This gives Nav2, AMCL, slam_toolbox, and any other consumer the correct yaw (and roll/pitch) variance, including all cross-correlation terms between position and orientation.
+
+**Gimbal lock:** At pitch = ±90°, all three Euler Jacobian denominators go to zero simultaneously — roll and yaw become undefined and the Jacobian is singular. FusionCore clamps all three denominators to a minimum of 1e-12, producing large-but-finite covariance rather than NaN. This is the mathematically correct behavior: at the singularity the filter genuinely does not know the roll–yaw decomposition, and the inflated covariance communicates that uncertainty correctly to downstream consumers.
 
 ---
 
