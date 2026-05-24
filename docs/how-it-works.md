@@ -14,7 +14,7 @@ Each robustness claim below has a corresponding test with a hard pass threshold.
 | Position stable while stationary | [Gazebo integration test 1](simulation.md#automated-integration-tests): 10 s IMU-only with GPS active | Drift < 2 m (typically < 0.1 m) |
 | GPS correction after motion | [Gazebo integration test 3](simulation.md#automated-integration-tests): drive then stop, measure stability with GPS active | Drift < 2 m in 3 s |
 | Dead reckoning stays coherent | [Gazebo integration test 4](simulation.md#automated-integration-tests): full circle return error | < 3 m (typically < 0.5 m) |
-| Accuracy on real outdoor data | [NCLT benchmark](https://manankharwar.github.io/fusioncore/): 9 full-length sequences, IMU + wheels + GPS | ATE 10–60 m (7/9 FC wins over RL-EKF) |
+| Accuracy on real outdoor data | [NCLT benchmark](https://manankharwar.github.io/fusioncore/): 12 full-length sequences, IMU + wheels + GPS | ATE 10–60 m (10/12 FC wins over RL-EKF) |
 | Spike visible in real data | [Zero-dependency demo](index.md#see-it-before-you-install): pre-baked NCLT spike test | FC +1 m vs RL-EKF +50 m on 707 m fake fix |
 
 The Gazebo tests run against the live simulation (`python3 integration_test.py`) and are reproducible on any machine with Gazebo Harmonic installed. The NCLT benchmark runs against real rosbag data. Both are described with reproduction steps.
@@ -300,13 +300,13 @@ Coast mode solves this by inflating `Q_position` by `gnss.coast_q_factor` during
 During GPS absence, heading errors accumulate at `gyro_bias * time` with no GPS heading cross-covariance to correct them. Coast mode inflates `Q_gyro_bias` by `gnss.coast_q_bias_factor` (default 100x) to loosen the filter's confidence in its current bias estimate. Simultaneously, `R_imu[WZ,WZ]` is inflated by `gnss.coast_imu_wz_scale` (default 500x) to down-weight the IMU heading rate and let encoder WZ dominate heading integration. Together these allow the filter to rapidly re-estimate gyro bias from encoder WZ readings during the blackout, rather than letting a stale bias estimate silently corrupt heading.
 
 **Coast mode triggers:**
-- After `gnss.coast_n` consecutive GPS rejections (default: 3)
+- After `gnss.coast_n` consecutive GPS rejections (default: 5)
 - After `gnss.coast_timeout_s` seconds of GPS silence (handles receiver-silent outages where no fixes arrive to reject)
 
 **Coast mode exits** when the first GPS fix passes the chi2 gate after the blackout ends. Process noise returns to normal immediately.
 
 ```yaml
-gnss.coast_n: 3                 # rejections before entering coast
+gnss.coast_n: 5                 # rejections before entering coast
 gnss.coast_q_factor: 10.0       # position Q multiplier during coast
 gnss.coast_q_bias_factor: 100.0 # gyro bias Q multiplier during coast
 gnss.coast_imu_wz_scale: 500.0  # R_imu[WZ] multiplier: encoder dominates heading
@@ -333,9 +333,9 @@ FusionCore stores a ring buffer of 100 IMU messages (1 second at 100 Hz). When a
 
 For wheeled ground robots, FusionCore fuses three pseudo-measurements on every encoder callback. Each one targets a different part of the state vector.
 
-**VZ = 0 (vertical velocity):** The robot cannot move vertically, so body-frame vertical velocity must be zero. This is the primary constraint. Noise sigma: 0.1 m/s.
+**VZ = 0 (vertical velocity):** The robot cannot move vertically, so body-frame vertical velocity must be zero. This is the primary constraint. The noise sigma starts at `ground_constraint.vz_sigma` (default 0.1 m/s) and adapts upward automatically when the robot traverses obstacles, curbs, or rough terrain where the chassis genuinely has transient vertical motion. On flat ground it relaxes back to the configured floor. No config changes needed between terrain types.
 
-**AZ = 0 (vertical acceleration):** Without this, a small mismatch between the IMU's local gravity reading and the WGS84 constant (9.80665 m/s²) leaks into the AZ state. Because the UKF process noise on acceleration is large, AZ absorbs the residual. AZ then integrates into VZ via the motion model, so the VZ=0 constraint above cannot fully compensate on its own. Constraining AZ directly eliminates the source of the leak. Noise sigma: 0.5 m/s².
+**AZ = 0 (vertical acceleration):** Without this, a small mismatch between the IMU's local gravity reading and the WGS84 constant (9.80665 m/s²) leaks into the AZ state. Because the UKF process noise on acceleration is large, AZ absorbs the residual. AZ then integrates into VZ via the motion model, so the VZ=0 constraint above cannot fully compensate on its own. Constraining AZ directly eliminates the source of the leak. The noise sigma starts at `ground_constraint.az_sigma` (default 0.5 m/s²) and adapts the same way as VZ.
 
 **Z position = 0 (optional, flat-terrain mode):** On flat terrain with GPS, GPS altitude corrections carry significant noise (typically 3-5m standard deviation). This noise causes Z position to oscillate, which adds to 3D ATE even when the robot is actually on flat ground. When `ground_constraint.z_position_sigma` is set to a positive value (recommended: 0.3m for known-flat terrain), FusionCore fuses a Z = 0 pseudo-measurement tight enough to dominate GPS altitude noise and keep the filter grounded.
 
