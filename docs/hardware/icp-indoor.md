@@ -29,8 +29,8 @@ Replace `/kiss/odometry` with whatever your ICP pipeline publishes:
 | KISS-ICP | `/kiss/odometry` | `nav_msgs/Odometry` |
 | rtabmap `icp_odometry` | `/icp_odom` | `nav_msgs/Odometry` |
 | rf2o_laser_odometry | `/odom` | `nav_msgs/Odometry` |
-| cartographer | `/tracked_pose` | `PoseStamped` — needs twist wrapper |
-| slam_toolbox | `/pose` | `PoseWithCovarianceStamped` — needs twist wrapper |
+| cartographer | `/tracked_pose` | `PoseStamped` (needs twist wrapper) |
+| slam_toolbox | `/pose` | `PoseWithCovarianceStamped` (needs twist wrapper) |
 
 > **FusionCore does not accept `sensor_msgs/LaserScan` or `PointCloud2` directly.**
 > A scan-matching node must convert your LiDAR data to `nav_msgs/Odometry` first.

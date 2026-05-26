@@ -48,7 +48,7 @@ TEST(VSLAMTest, OutlierIsRejected) {
   fc.init(initial, 0.0);
 
   VslamPose pose;
-  pose.x     = 500.0;   // 500m jump — should be gated
+  pose.x     = 500.0;   // 500m jump, should be gated
   pose.y     = 0.0;
   pose.z     = 0.0;
   pose.has_position_cov  = true;

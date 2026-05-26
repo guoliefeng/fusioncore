@@ -13,7 +13,7 @@
 #     fusioncore_config:=$(ros2 pkg prefix fusioncore_ros)/share/fusioncore_ros/config/vslam_imu.yaml
 #
 # Set vslam.topic to wherever your VSLAM publishes nav_msgs/Odometry.
-# The covariance field must be filled — see docs/hardware/vslam-imu.md.
+# The covariance field must be filled; see docs/hardware/vslam-imu.md.
 
 fusioncore:
   ros__parameters:

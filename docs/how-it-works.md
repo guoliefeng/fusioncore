@@ -396,7 +396,7 @@ The full 6×6 `pose.covariance` is then assembled as:
 
 This gives Nav2, AMCL, slam_toolbox, and any other consumer the correct yaw (and roll/pitch) variance, including all cross-correlation terms between position and orientation.
 
-**Gimbal lock:** At pitch = ±90°, all three Euler Jacobian denominators go to zero simultaneously — roll and yaw become undefined and the Jacobian is singular. FusionCore clamps all three denominators to a minimum of 1e-12, producing large-but-finite covariance rather than NaN. This is the mathematically correct behavior: at the singularity the filter genuinely does not know the roll–yaw decomposition, and the inflated covariance communicates that uncertainty correctly to downstream consumers.
+**Gimbal lock:** At pitch = ±90°, all three Euler Jacobian denominators go to zero simultaneously: roll and yaw become undefined and the Jacobian is singular. FusionCore clamps all three denominators to a minimum of 1e-12, producing large-but-finite covariance rather than NaN. This is the mathematically correct behavior: at the singularity the filter genuinely does not know the roll–yaw decomposition, and the inflated covariance communicates that uncertainty correctly to downstream consumers.
 
 ---
 

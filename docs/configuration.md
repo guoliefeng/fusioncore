@@ -92,7 +92,7 @@ fusioncore:
     gnss.min_satellites: 4
     gnss.min_fix_type: 1        # 1=GPS, 2=DGPS, 3=RTK_FLOAT, 4=RTK_FIXED
                                 # NavSatFix: status=2 maps to RTK_FIXED. RTK_FLOAT (3)
-                                # is unreachable via NavSatFix — use gnss.use_gps_fix
+                                # is unreachable via NavSatFix; use gnss.use_gps_fix
                                 # below if your receiver publishes gps_msgs/GPSFix.
 
     gnss.use_gps_fix: false     # Set true when your driver publishes gps_msgs/GPSFix

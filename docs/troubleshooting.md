@@ -297,7 +297,7 @@ Two causes and two different fixes:
 - **ORB-SLAM3 just lost tracking and reinitialized:** expected. The chi-squared gate correctly rejects the discontinuous pose jump. After `vslam.reinit_n` consecutive rejections (default 10 ≈ 2 s at 5 Hz), FusionCore automatically re-anchors to the filter's current position and resumes fusion. You will see this in the log:
 
   ```
-  [WARN] VSLAM: 10 consecutive rejections — reinitialization detected. Re-anchoring map origin.
+  [WARN] VSLAM: 10 consecutive rejections: reinitialization detected. Re-anchoring map origin.
   ```
 
   If this fires too eagerly during fast motion, increase `vslam.reinit_n`. If recovery after tracking loss is too slow, decrease it.

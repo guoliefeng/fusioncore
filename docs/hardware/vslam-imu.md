@@ -107,7 +107,7 @@ ORB-SLAM3 can jump by meters on tracking loss and recovery. Two mechanisms work 
 **Map re-anchoring** (recovery): after `vslam.reinit_n` consecutive gate rejections (default 10, roughly 2 seconds at 5 Hz), FusionCore concludes that ORB-SLAM3 has reinitialized to a new map origin. It computes a new offset between the VSLAM map frame and the filter's odom frame using the filter's current position estimate, and resumes fusion from there. This is logged as a WARN:
 
 ```
-[WARN] VSLAM: 10 consecutive rejections — reinitialization detected. Re-anchoring map origin.
+[WARN] VSLAM: 10 consecutive rejections: reinitialization detected. Re-anchoring map origin.
 ```
 
 Tune `outlier_threshold_vslam` if:

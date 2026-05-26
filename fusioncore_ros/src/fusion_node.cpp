@@ -1531,7 +1531,7 @@ private:
         vslam_offset_z_ = s.x[fusioncore::Z] - raw_z;
         vslam_consecutive_rejects_ = 0;
         RCLCPP_WARN(get_logger(),
-          "VSLAM: %d consecutive rejections — reinitialization detected. "
+          "VSLAM: %d consecutive rejections: reinitialization detected. "
           "Re-anchoring map origin. new offset=(%.3f, %.3f, %.3f)",
           vslam_reinit_n_, vslam_offset_x_, vslam_offset_y_, vslam_offset_z_);
       }

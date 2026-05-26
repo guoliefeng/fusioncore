@@ -844,7 +844,7 @@ bool FusionCore::apply_gnss_update(
 
           // Advance reference only when sigma was acceptable. If sigma was too
           // high (distance not large enough relative to GPS noise), do NOT
-          // advance — let the displacement keep accumulating until the baseline
+          // advance; let the displacement keep accumulating until the baseline
           // is long enough for a reliable heading. With NCLT GPS (σ=3m) and
           // max_sigma=0.4 rad, fusion first fires at ~7.5m of displacement.
           last_hdg_fix_x_ = fix.x;
