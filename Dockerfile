@@ -39,6 +39,9 @@ COPY --from=builder /fusioncore_ws/src/fusioncore/demo /fusioncore_ws/src/fusion
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-numpy \
     python3-matplotlib \
+    ros-jazzy-gps-msgs \
+    libproj-dev \ 
+    ros-jazzy-geographic-msgs \
     && rm -rf /var/lib/apt/lists/*
 
 # Source both ROS and workspace on every bash session

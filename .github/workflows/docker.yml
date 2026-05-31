@@ -11,6 +11,8 @@ on:
       - '**/CMakeLists.txt'
       - '**/package.xml'
       - '.github/workflows/docker.yml'
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -22,6 +24,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/manankharwar/fusioncore
+          tags: |
+            # On every push to main: tag with latest + commit SHA
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+            # On release (v0.2.4): tag with 0.2.4, 0.2, 0
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -38,9 +54,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/manankharwar/fusioncore:latest
-            ghcr.io/manankharwar/fusioncore:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: runtime
