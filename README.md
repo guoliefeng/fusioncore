@@ -61,7 +61,8 @@ docker run --rm -it --net=host \
     -r /gnss/fix:=/your/gps/topic
 ```
 
-📖 **Full Docker guide**: volume mounts, topic remapping, `--net=host`, and more → **[docs/docker.md](https://manankharwar.github.io/fusioncore/docker/)**
+Full guide (volume mounts, topic remapping, `--net=host`): [docs/docker.md](https://manankharwar.github.io/fusioncore/docker/)
+
 ---
 
 ## Works on the hardware you actually have
