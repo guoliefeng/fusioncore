@@ -1,0 +1,34 @@
+# robot_localization navsat_transform config for outdoor hardware comparison
+#
+# Converts NavSatFix (GPS) to nav_msgs/Odometry in the local ENU frame.
+# Output feeds into rl_ekf_outdoor.yaml as odom1.
+#
+# Platform: differential-drive outdoor robot, Hamilton ON Canada
+# GPS: u-blox ZED-F9P
+
+navsat_transform:
+  ros__parameters:
+    frequency: 10.0
+
+    # Hamilton ON: magnetic declination ~-10.3 deg (west) as of 2026
+    # Get your local value: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
+    magnetic_declination_radians: -0.1798
+
+    # Yaw offset: 0 if robot x-axis points forward (standard)
+    yaw_offset: 0.0
+
+    # Ignore GPS altitude: flat terrain, GPS Z noise (~3m) causes more harm than good
+    zero_altitude: true
+
+    # Use the first valid GPS fix as the map origin
+    # Note: if the robot starts moving before GPS lock, datum may be inaccurate
+    wait_for_datum: false
+    use_odometry_yaw: false
+
+    broadcast_utm_transform: false
+    publish_filtered_gps: false
+    use_local_cartesian: false
+
+    # Input topics
+    # navsat_transform subscribes to /gps/fix and /odometry/filtered (odom from ekf_node)
+    # and publishes /odometry/gps
