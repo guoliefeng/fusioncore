@@ -73,7 +73,7 @@ Metric: ATE RMSE (meters), SE3-aligned to RTK ground truth using EVO. Same IMU, 
 
 Both losses have identified root causes. They are documented here rather than hidden.
 
-**2012-06-15 (FC 49.2m, RL 18.2m):** The dataset's GPS-sparsest sequence, with a 462-second blackout. During coast mode, any residual wheel encoder yaw bias (`b_ewz`) compounds at 100Hz into quadratic lateral drift. RL-EKF's 2D mode has fewer divergence degrees of freedom. The fix is magnetometer integration for absolute heading during GPS outage: not yet implemented.
+**2012-06-15 (FC 49.2m, RL 18.2m):** The dataset's GPS-sparsest sequence, with a 462-second blackout. During coast mode, any residual wheel encoder yaw bias (`b_ewz`) compounds at 100Hz into quadratic lateral drift. RL-EKF's 2D mode has fewer divergence degrees of freedom. The fix is magnetometer integration for absolute heading during GPS outage: available in v0.3.1 via `magnetometer.enabled: true`.
 
 **2012-08-20 (FC 98.3m, RL 10.6m):** 105 mode-3 GPS fixes located 720-840m from RTK ground truth appear in a 24-second window at a blackout boundary. Coast mode relaxes the chi-squared gate slightly to re-acquire GPS after the blackout. The adversarial cluster each individually pass the gate and collectively pull the estimate. RL-EKF incidentally rejects them through its miscalibrated gate (the same gate that causes its ten other losses). The fix is a `max_implied_speed` pre-check upstream of chi-squared gating: not yet implemented.
 

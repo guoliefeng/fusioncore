@@ -174,9 +174,10 @@ FusionCore tracks a `heading_validated_` flag that only sets true from a genuine
 |---|---|
 | `DUAL_ANTENNA` | Dual antenna heading message received |
 | `IMU_ORIENTATION` | 9-axis AHRS published full orientation (`imu.has_magnetometer: true`) |
+| `MAGNETOMETER` | Raw magnetometer fused via `magnetometer.enabled: true` (tilt-compensated, iron-corrected) |
 | `GPS_TRACK` | Robot traveled ≥5 m at speed ≥0.2 m/s with yaw rate ≤0.3 rad/s |
 
-Before any of these, lever arm correction is disabled regardless of yaw variance. A 6-axis IMU with gyro-only yaw integration does not count as validated.
+Priority: DUAL_ANTENNA overrides MAGNETOMETER overrides GPS_TRACK. Before any of these, lever arm correction is disabled regardless of yaw variance. A 6-axis IMU with gyro-only yaw integration does not count as validated.
 
 ---
 

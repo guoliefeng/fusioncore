@@ -10,7 +10,7 @@ During GPS blackouts, FusionCore dead-reckons on IMU and wheel encoders. The enc
 
 On the NCLT 2012-06-15 sequence (461-second blackout), FC accumulated significant heading error. See [issue #63](https://github.com/manankharwar/fusioncore/issues/63).
 
-**Workaround:** If your platform has a magnetometer and your operating environment has low magnetic interference, fusing magnetometer heading during blackouts closes this observability gap. Magnetometer support is on the roadmap.
+**Workaround:** Set `magnetometer.enabled: true` and point `magnetometer.topic` at your `sensor_msgs/MagneticField` publisher. FusionCore applies hard/soft iron correction and tilt compensation, then fuses the heading as a 1-DOF UKF update. This closes the heading observability gap during GPS outages. Requires magnetometer calibration (imu_calib or magneto) and a magnetically clean environment.
 
 ---
 
