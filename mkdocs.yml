@@ -85,6 +85,11 @@ nav:
     - Handling delayed GPS measurements: guides/delayed-gps-measurements.md
     - navsat_transform startup errors: guides/navsat-transform-startup-errors.md
     - EKF and UKF NaN divergence: guides/ekf-ukf-nan-divergence.md
+  - Certified Configs:
+    - Registry: certified-configs/index.md
+    - Microstrain 3DM-GX3-45 + Novatel SPAN-CPT: certified-configs/microstrain-3dm-gx3-45-segway.md
+    - Bosch BNO085 + u-blox ZED-F9P: certified-configs/bosch-bno085-ublox-f9p-outdoor.md
+    - Xsens MTi-680G: certified-configs/xsens-mti-680g-fsae.md
   - Known Limitations: known-limitations.md
   - Support & Integration: support.md
   - Blog: blog/index.md
