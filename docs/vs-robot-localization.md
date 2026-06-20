@@ -56,8 +56,8 @@ where `Ĉ` is the empirical innovation covariance and `α = 0.01`. A floor preve
 | 2012-05-11 | Spring | 84 min | **9.7 m** | 11.5 m | FC +16% |
 | 2012-06-15 | Summer | 55 min | 49.2 m | **18.2 m** | RL +63% |
 | 2012-08-20 | Summer | 83 min | 98.3 m | **10.6 m** | RL +89% |
-| 2012-09-28 | Fall | 77 min | **10.8 m** | 55.7 m | FC +81% |
-| 2012-10-28 | Fall | 85 min | **29.9 m** | 60.0 m | FC +50% |
+| 2012-09-28 | Fall | 77 min | **22.4 m** | 53.8 m | FC +58% |
+| 2012-10-28 | Fall | 85 min | **15.6 m** | 56.4 m | FC +72% |
 | 2012-11-04 | Fall | 79 min | **60.1 m** | 122.0 m | FC +51% |
 | 2012-12-01 | Winter | 75 min | **21.0 m** | 90.7 m | FC +77% |
 | 2013-02-23 | Winter | 78 min | **59.4 m** | 82.2 m | FC +28% |

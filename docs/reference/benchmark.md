@@ -14,8 +14,8 @@ FusionCore vs robot_localization EKF on the [NCLT dataset](http://robots.engin.u
 | 2012-05-11 | Spring | 84 min | 21,621 | 120s | **9.7 m** | 11.5 m | FC +16% |
 | 2012-06-15 | Summer | 55 min | 12,399 | **462s** | 49.2 m | **18.2 m** | RL +63% |
 | 2012-08-20 | Summer | 83 min | 20,025 | 228s | 98.3 m | **10.6 m** | RL +89% |
-| 2012-09-28 | Fall | 77 min | 19,191 | 196s | **10.8 m** | 55.7 m | FC +81% |
-| 2012-10-28 | Fall | 85 min | 21,060 | 256s | **29.9 m** | 60.0 m | FC +50% |
+| 2012-09-28 | Fall | 77 min | 19,191 | 196s | **22.4 m** | 53.8 m | FC +58% |
+| 2012-10-28 | Fall | 85 min | 21,060 | 256s | **15.6 m** | 56.4 m | FC +72% |
 | 2012-11-04 | Fall | 79 min | 17,840 | 400s | **60.1 m** | 122.0 m | FC +51% |
 | 2012-12-01 | Winter | 75 min | 17,941 | 173s | **21.0 m** | 90.7 m | FC +77% |
 | 2013-02-23 | Winter | 78 min | 19,333 | 240s | **59.4 m** | 82.2 m | FC +28% |
@@ -43,10 +43,10 @@ RL-UKF: NaN divergence on all twelve sequences (known numerical instability unde
 |            | RL-EKF     | **18.2 m** | **17.1 m** | 42.8% | 78.4% | **3.11** | **22.3 m** |
 | 2012-08-20 | FusionCore | 98.3 m | 97.9 m | 0.1% | 13.8% | 13.08 | 53.7 m |
 |            | RL-EKF     | **10.6 m** | **9.9 m** | 59.4% | 89.3% | **1.40** | **19.1 m** |
-| 2012-09-28 | FusionCore | **10.8 m** | **7.5 m** | 31.4% | 76.9% | **1.50** | **23.7 m** |
-|            | RL-EKF     | 55.7 m | 55.5 m | 1.7% | 25.1% | 7.73 | 28.0 m |
-| 2012-10-28 | FusionCore | **29.9 m** | **21.1 m** | 19.9% | 59.7% | **3.69** | 40.6 m |
-|            | RL-EKF     | 60.0 m | 59.6 m | 0.1% | 3.6% | 7.40 | **27.8 m** |
+| 2012-09-28 | FusionCore | **22.4 m** | **19.2 m** | 24.1% | 72.1% | **3.10** | **23.5 m** |
+|            | RL-EKF     | 53.8 m | 53.5 m | 3.9% | 24.9% | 7.45 | 27.6 m |
+| 2012-10-28 | FusionCore | **15.6 m** | **11.4 m** | 24.2% | 61.8% | **1.93** | **27.0 m** |
+|            | RL-EKF     | 56.4 m | 56.1 m | 0.4% | 11.4% | 6.96 | 28.4 m |
 | 2012-11-04 | FusionCore | **60.1 m** | **59.2 m** | 3.8% | 29.5% | **9.86** | **32.3 m** |
 |            | RL-EKF     | 122.0 m | 121.9 m | 0.0% | 0.0% | 20.02 | 37.0 m |
 | 2012-12-01 | FusionCore | **21.0 m** | **14.6 m** | 24.3% | 65.4% | **2.90** | 32.9 m |
@@ -60,7 +60,7 @@ RL-UKF: NaN divergence on all twelve sequences (known numerical instability unde
 
 ## Methodology
 
-**Dataset:** NCLT (University of Michigan, 2012-2013). Wheeled robot (Segway RMP) driving on a large campus over multiple seasons. Raw CSV sensor files replayed at 3x real time via `nclt_player`.
+**Dataset:** NCLT (University of Michigan, 2012-2013). Wheeled robot (Segway RMP) driving on a large campus over multiple seasons. Raw CSV sensor files replayed at 1x real time via `nclt_player`.
 
 **Sensors used (identical inputs to both filters):**
 
@@ -94,8 +94,8 @@ The cause is consistent across all RL failures: `nclt_player` publishes `positio
 | 2012-05-11 | 3.3 m | 13.3 m | 47.7 m | 11.5 m |
 | 2012-06-15 | 2.6 m | 9.7 m | 21.3 m | **18.2 m** (RL wins) |
 | 2012-08-20 | 3.4 m | 12.7 m | 55.0 m | **10.6 m** (RL wins) |
-| 2012-09-28 | 3.5 m | 12.8 m | 43.2 m | 55.7 m |
-| 2012-10-28 | 4.6 m | 16.0 m | 48.9 m | 60.0 m |
+| 2012-09-28 | 3.5 m | 12.8 m | 43.2 m | 53.8 m |
+| 2012-10-28 | 4.6 m | 16.0 m | 48.9 m | 56.4 m |
 | 2012-11-04 | 5.7 m | **53.1 m** | 79.2 m | 122.0 m |
 | 2012-12-01 | 4.7 m | 20.7 m | 80.4 m | 90.7 m |
 | 2013-02-23 | 5.4 m | 33.0 m | 73.6 m | 82.2 m |
@@ -128,11 +128,11 @@ FC drift rate is consistent at 1-4 m/km on clean sequences. Values above 6 m/km 
 
 ## FC performance tiers
 
-**Excellent (< 20m ATE):** 2012-05-11 (9.7m), 2012-09-28 (10.8m), 2013-04-05 (12.1m), 2012-01-08 (18.6m)
+**Excellent (< 20m ATE):** 2012-05-11 (9.7m), 2013-04-05 (12.1m), 2012-10-28 (15.6m), 2012-01-08 (18.6m)
 
-High GPS fix count (19k-22k), max blackout under 200s, no adversarial GPS. FC operates as intended.
+High GPS fix count (19k-22k), max blackout under 300s, no adversarial GPS. FC operates as intended.
 
-**Good (20-35m ATE):** 2012-03-31 (22.0m), 2012-12-01 (21.0m), 2012-10-28 (29.9m)
+**Good (20-35m ATE):** 2012-12-01 (21.0m), 2012-03-31 (22.0m), 2012-09-28 (22.4m)
 
 Moderate GPS density, blackouts under 275s, clean GPS at boundaries. Occasional heading drift corrected quickly on GPS return.
 
@@ -194,13 +194,13 @@ The 98m ATE RMSE is driven almost entirely by those two transients. RL-EKF wins 
 # Build
 colcon build --packages-select fusioncore_core fusioncore_ros fusioncore_datasets
 
-# Run one sequence (auto-stops on playback complete, ~15-50 min at 3x)
+# Run one sequence (auto-stops on playback complete, ~60-95 min at 1x)
 bash benchmarks/run_one.sh 2012-01-08
 
 # Results written to:
 # benchmarks/nclt/2012-01-08/results_full/BENCHMARK.md
 
-# Run all 12 sequences sequentially (plan for 6-8 hours total)
+# Run all 12 sequences sequentially (plan for 15-20 hours total)
 bash benchmarks/run_all.sh
 ```
 

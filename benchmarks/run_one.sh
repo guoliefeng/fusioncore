@@ -36,15 +36,18 @@ if ! ros2 pkg list 2>/dev/null | grep -q "^fusioncore_datasets$"; then
     INSTALL_SETUP="$REPO/install/setup.bash"
     if [ -f "$INSTALL_SETUP" ]; then
         # shellcheck disable=SC1090
+        # colcon's setup.bash references COLCON_TRACE without a default; guard it
+        set +u
         source "$INSTALL_SETUP"
+        set -u
     else
         echo "ERROR: fusioncore_datasets package not found."
         echo "  Fix: cd $REPO && colcon build --packages-select fusioncore_core fusioncore_ros fusioncore_datasets"
         exit 1
     fi
 fi
-RATE=3.0
-WALL_TIME=3000   # hard cap: 50 min covers longest sequence at 3x
+RATE=1.0
+WALL_TIME=9000   # hard cap: 150 min covers longest sequence at 1x
 
 DATA_DIR="$REPO/benchmarks/nclt/$SEQ"
 BAG_DIR="$DATA_DIR/bag_full"

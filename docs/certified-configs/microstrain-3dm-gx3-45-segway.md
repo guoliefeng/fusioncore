@@ -113,7 +113,7 @@ Evaluated against RTK GPS ground truth (Novatel SPAN-CPT RTK mode) using `evo_ap
 |---|---|---|
 | 2012-01-08 | 18.6 m | +55% better |
 | 2012-05-11 | 9.7 m | +16% better |
-| 2012-09-28 | 10.8 m | +81% better |
+| 2012-09-28 | 22.4 m | +58% better |
 | 2013-04-05 | 12.1 m | +96% better |
 | 2012-08-20 | 98.3 m | RL wins (adversarial GPS cluster at blackout boundary) |
 
