@@ -38,6 +38,15 @@ fusioncore:
     # Set only if your driver publishes with an empty frame_id.
     imu.frame_id: ""
 
+    # IMU lever arm: offset from base_link to the IMU sensing point in body frame.
+    # x=forward, y=left, z=up (meters). Leave at 0.0 to auto-resolve from TF
+    # (base_frame -> imu_frame via URDF). Set non-zero to override the TF value.
+    # Corrects the centripetal acceleration ω×(ω×r) that appears when the IMU
+    # is not at the rotation center. Significant when |r| > 0.1 m and |ω| > 0.3 rad/s.
+    imu.lever_arm_x: 0.0
+    imu.lever_arm_y: 0.0
+    imu.lever_arm_z: 0.0
+
     # Optional second IMU source. Leave empty to disable.
     imu2.topic: ""
     imu2.frame_id: ""
@@ -88,11 +97,18 @@ fusioncore:
     gnss.velocity_topic: ""
 
     # Antenna lever arm: offset from base_link to primary GNSS antenna in body frame.
-    # x=forward, y=left, z=up (meters). Leave at 0.0 if antenna is above base_link origin.
-    # Only applied when heading is validated AND heading_sigma < lever_arm_max_heading_sigma_deg.
+    # x=forward, y=left, z=up (meters). Leave at 0.0 to auto-resolve from TF
+    # (base_frame -> GNSS msg frame_id via URDF); set non-zero to override.
+    # Applied when heading is validated AND heading_sigma < lever_arm_max_heading_sigma_deg,
+    # OR when gnss.apply_lever_arm_pre_heading is true.
     gnss.lever_arm_x: 0.0
     gnss.lever_arm_y: 0.0
     gnss.lever_arm_z: 0.0
+
+    # When true, applies the GNSS lever arm from the very first fix instead of waiting
+    # for heading validation. Turns GPS position into an active yaw correction from startup.
+    # Safe with Mahalanobis gating on and RTK-grade fixes. Off by default.
+    gnss.apply_lever_arm_pre_heading: false
 
     # Optional second GNSS receiver. Leave empty to disable.
     gnss.fix2_topic: ""
