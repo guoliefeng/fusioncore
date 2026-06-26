@@ -156,6 +156,16 @@ struct FusionCoreConfig {
   // and then rejects the recovery fixes as apparent outliers.
   // 0 = disabled; typical value: 5
   int    gnss_coast_n        = 5;
+  // Rejection-triggered coast only fires when the rejection sequence began
+  // after a GPS gap of at least this many seconds (i.e. the filter plausibly
+  // drifted blind and is now rejecting the returning fix). A continuously
+  // present GPS that keeps failing the chi2 gate is a persistent outlier (e.g.
+  // a multipath spike), NOT filter drift: inflating P to admit it would let the
+  // outlier defeat the gate. Gating coast on a preceding gap keeps a sustained
+  // spike rejected for its whole duration while preserving post-outage
+  // re-acquisition. The pure-absence coast path (gnss_coast_timeout_s) is
+  // unaffected. Set to 0 to restore the old gap-agnostic behavior.
+  double gnss_coast_min_gap_s = 1.0;
   // Multiplier applied to q_position each predict step while in coast mode.
   // 20.0 = 4.5x position sigma growth per second at 100Hz IMU.
   double gnss_coast_q_factor = 20.0;
@@ -482,6 +492,10 @@ private:
   // Inertial coast mode tracking
   int  gnss_consecutive_rejects_ = 0;
   bool gnss_in_coast_            = false;
+  // Whether the current rejection sequence began after a GPS gap. Captured at
+  // the first rejection of a sequence and used to gate rejection-triggered
+  // coast so a continuous outlier (spike) cannot inflate P to defeat the gate.
+  bool reject_after_gap_         = false;
   // Recovery mode: after a timeout-triggered coast, accept the first returning
   // GPS fix unconditionally (bypass chi2 gate). After 7+ minutes blind, dead
   // reckoning error can be hundreds of meters, far outside the chi2 gate.

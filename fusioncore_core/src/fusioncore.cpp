@@ -2,6 +2,7 @@
 #include "fusioncore/sensors/imu.hpp"
 #include <stdexcept>
 #include <cmath>
+#include <limits>
 
 namespace fusioncore {
 
@@ -142,6 +143,7 @@ void FusionCore::init(const State& initial_state, double timestamp_seconds) {
   gnss_consecutive_rejects_ = 0;
   gnss_in_coast_            = false;
   gnss_in_recovery_         = false;
+  reject_after_gap_         = false;
   ukf_.set_position_noise_scale(1.0);
   ukf_.set_gyro_bias_noise_scale(1.0);
 
@@ -177,6 +179,7 @@ void FusionCore::reset() {
   gnss_consecutive_rejects_ = 0;
   gnss_in_coast_            = false;
   gnss_in_recovery_         = false;
+  reject_after_gap_         = false;
   ukf_.set_position_noise_scale(1.0);
   ukf_.set_gyro_bias_noise_scale(1.0);
 
@@ -855,15 +858,29 @@ bool FusionCore::apply_gnss_update(
       gnss_debug_.reason   = GnssRejectionReason::CHI2_FAILED;
 
       if (config_.gnss_coast_n > 0) {
+        // At the start of a rejection sequence, decide whether GPS was
+        // continuous (a persistent outlier like a multipath spike) or is
+        // returning after a gap (the filter may have drifted blind). Only the
+        // latter justifies inflating P to re-admit GPS. last_gnss_time_ is the
+        // last ACCEPTED fix, so the gap to it is small during a continuous
+        // spike and large after an outage.
+        if (gnss_consecutive_rejects_ == 0) {
+          double gap = (last_gnss_time_ < 0.0)
+                         ? std::numeric_limits<double>::infinity()
+                         : (timestamp_seconds - last_gnss_time_);
+          reject_after_gap_ = (gap >= config_.gnss_coast_min_gap_s);
+        }
         ++gnss_consecutive_rejects_;
         gnss_debug_.consecutive_rejects = gnss_consecutive_rejects_;
-        if (gnss_consecutive_rejects_ >= config_.gnss_coast_n && !gnss_in_coast_) {
+        if (reject_after_gap_ &&
+            gnss_consecutive_rejects_ >= config_.gnss_coast_n && !gnss_in_coast_) {
           gnss_in_coast_ = true;
           gnss_debug_.in_coast_mode = true;
           ukf_.set_position_noise_scale(config_.gnss_coast_q_factor);
           ukf_.set_gyro_bias_noise_scale(config_.gnss_coast_q_bias_factor);
         }
-        if (config_.gnss_recovery_rejection_n > 0 &&
+        if (reject_after_gap_ &&
+            config_.gnss_recovery_rejection_n > 0 &&
             gnss_consecutive_rejects_ == config_.gnss_recovery_rejection_n) {
           double s2 = config_.gnss_p_inflate_sigma * config_.gnss_p_inflate_sigma;
           ukf_.inflate_position_covariance(s2);
