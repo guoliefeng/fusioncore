@@ -99,6 +99,7 @@ position_sigma_y: 2.4         # how uncertain the filter was about position righ
 | `FIX_TYPE_LOW` | fix_type below `gnss.min_fix_type` (default GPS) | Receiver hasn't locked |
 | `CHI2_FAILED` | Passed quality gates but Mahalanobis distance too large | GPS jump, multipath, or filter drift |
 | `DELAY_TOO_LARGE` | Fix arrived more than `max_measurement_delay` seconds late | Network or driver latency |
+| `IMPLAUSIBLE_JUMP` | Fix farther from the prediction than `gnss.max_speed` allows | Impossible GPS jump (only when `gnss.max_speed` > 0) |
 
 **Reading `mahalanobis_sq`:**
 

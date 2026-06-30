@@ -287,6 +287,18 @@ fusioncore:
     # Do NOT lower these below chi2 critical values. At 7.0 normal GPS noise
     # trips the gate and every fix gets rejected.
 
+    gnss.max_speed: 0.0
+    # Physical-plausibility gate on GPS position. Rejects any fix farther from the
+    # filter's predicted position than the robot could have moved or drifted since
+    # the last accepted fix: max_speed * gap_seconds + max_speed_margin. This is a
+    # kinematic backstop that catches an impossible GPS jump the chi2 gate may
+    # admit when its covariance has been inflated during coast recovery. Set to the
+    # platform's maximum plausible speed in m/s (a few times cruise is safe); this
+    # is a per-robot spec like wheel radius, not per-run tuning. 0.0 = disabled.
+    gnss.max_speed_margin: 5.0
+    # Slack (m) added to the max_speed * gap bound: covers GPS noise and the
+    # uncertainty in the predicted position. 3-5 m is typical.
+
     # ── Adaptive noise ────────────────────────────────────────────────────────
     adaptive.imu: true
     adaptive.encoder: true
