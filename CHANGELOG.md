@@ -8,7 +8,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [0.3.2]: 2026-07-06
+
 ### Fixed
+- **Backward time-jumps no longer crash the filter.** A non-monotonic sensor timestamp (a clock rewind, a replayed bag, or a WSL2 clock glitch) previously produced a negative `dt` that drove the UKF covariance non-positive-definite and aborted the process. `predict_to` now re-syncs the clock on a backward jump instead of integrating a negative step, and the UKF floors covariance eigenvalues rather than throwing. Validated on a real NCLT run that used to SIGABRT within ~2 minutes and now survives end to end.
 - **Sustained GPS spikes no longer defeat the outlier gate.** Previously the chi2 gate rejected a spike at first, but after `gnss.coast_n` consecutive rejections coast mode inflated the position process noise until the gate widened enough to admit the spike (on an 8 s, 60 m spike the filter lunged to ~62 m error after ~5 s). Coast mode is meant for re-acquisition after a GPS gap, so firing it for a continuously present, consistently rejected GPS (a persistent multipath spike) was the bug. Rejection-triggered coast (and the recovery P-inflate) now only fire when the rejection streak began after a real GPS gap. Validated on a deterministic repro (sustained-spike peak error 62 m to 1.9 m, post-outage re-acquisition preserved) and in the Gazebo demo (FusionCore RMSE 18.15 m to 2.76 m, now clearly below robot_localization's 18.6 m). Adds `test_gnss_coast` (sustained-spike-stays-rejected, outage-still-recovers).
 - **Gazebo outdoor demo now works end to end.** The GPS publisher tracked a static crop row instead of the robot (the ros_gz bridge emits empty frame_ids, so the body finder fell through to a heuristic that locked onto scenery): the robot is now identified by its model height. The demo also mixed wall-clock nodes with sim time, which blew up the velocity estimate under headless: every node now runs on sim time. Added a `base_link -> gnss_link` static TF (removes lever-arm warning spam) and the launch now triggers the initial lifecycle CONFIGURE.
 
@@ -18,6 +23,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`gnss.coast_min_gap_s`** parameter (default 1.0 s): minimum preceding GPS gap before rejection-triggered coast may fire. Set to 0 to restore the previous gap-agnostic behavior.
 - **`headless` and `start_delay` launch args** for `fusioncore_demo.launch.py`: run Gazebo with no GUI (CI / offscreen), and adjust when the robot starts driving.
 - **WSL2 UDP-only Fast-DDS profile** (`fusioncore_gazebo/config/fastdds_udp.xml`): the shared-memory transport fails on WSL2 (`RTPS_TRANSPORT_SHM` errors), dropping `/cmd_vel` and corrupting `/clock`. Point `FASTRTPS_DEFAULT_PROFILES_FILE` at this profile for reliable comms. See the troubleshooting and simulation docs.
+- **Benchmark regression tracking**: `evaluate.py` now emits `metrics.json`, and `tools/check_benchmark_regression.py` compares a run against `tools/benchmark_baseline.json` so a tuning change that silently worsens another sequence is caught instead of shipping unnoticed. Documented in `tools/benchmark_regression.md`.
+
+### Changed
+- **Documentation accuracy pass**: the benchmark and comparison pages no longer describe the magnetometer as a roadmap item (it ships) or `gnss.max_speed` as hypothetical (it ships), the long-blackout losses are explained honestly as dead-reckoning drift rather than the visible GPS transients, and the published NCLT numbers now carry a note that they predate a controlled full-suite re-run (the 2013-04-05 figure has regressed 12.1 m to ~19.4 m, still a 93% win).
 
 ---
 
