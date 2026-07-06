@@ -65,6 +65,8 @@ where `Ĉ` is the empirical innovation covariance and `α = 0.01`. A floor preve
 
 RL-UKF diverged with NaN on all twelve sequences. FusionCore wins 10 of 12.
 
+> **Note on these numbers.** This table is a snapshot pending a controlled full-suite re-run on the current `main`. The 10-of-12 result holds, but treat the individual magnitudes as directional: at least one sequence (2013-04-05) has regressed since this snapshot, so the 12.1 m figure above is stale. The regression-tracking harness and current baseline live in `tools/benchmark_regression.md` and `tools/benchmark_baseline.json`. The table will be refreshed once a verified full re-run lands.
+
 Metric: ATE RMSE (meters), SE3-aligned to RTK ground truth using EVO. Same IMU, wheel odometry, and GPS inputs. Full methodology in the [benchmark reference](reference/benchmark.md).
 
 ---
@@ -73,9 +75,9 @@ Metric: ATE RMSE (meters), SE3-aligned to RTK ground truth using EVO. Same IMU, 
 
 Both losses have identified root causes. They are documented here rather than hidden.
 
-**2012-06-15 (FC 49.2m, RL 18.2m):** The dataset's GPS-sparsest sequence, with a 462-second blackout. During coast mode, any residual wheel encoder yaw bias (`b_ewz`) compounds at 100Hz into quadratic lateral drift. RL-EKF's 2D mode has fewer divergence degrees of freedom. The fix is magnetometer integration for absolute heading during GPS outage: available in v0.3.1 via `magnetometer.enabled: true`.
+**2012-06-15 (FC 49.2m, RL 18.2m):** The dataset's GPS-sparsest sequence, with a 462-second blackout. During coast mode, residual wheel-encoder yaw bias (`b_ewz`) and gyro drift accumulate into quadratic position error over the multi-minute outage. RL-EKF's 2D mode has fewer divergence degrees of freedom. The lever for this is an absolute heading source during the outage: `magnetometer.enabled: true` bounds heading drift instead of letting it accumulate (demonstrated in a unit test with slipping wheel odometry). **Honesty caveat:** this cannot be validated against *this NCLT number*, the dataset publishes no usable magnetometer and its ground-truth orientation is too noisy to score a few-metre change. So the magnetometer is validated by construction and in test, and awaits real-hardware confirmation; it is not proven to close this specific loss.
 
-**2012-08-20 (FC 98.3m, RL 10.6m):** 105 mode-3 GPS fixes located 720-840m from RTK ground truth appear in a 24-second window at a blackout boundary. Coast mode relaxes the chi-squared gate slightly to re-acquire GPS after the blackout. The adversarial cluster each individually pass the gate and collectively pull the estimate. RL-EKF incidentally rejects them through its miscalibrated gate (the same gate that causes its ten other losses). The fix is a `max_implied_speed` pre-check upstream of chi-squared gating: not yet implemented.
+**2012-08-20 (FC 98.3m, RL 10.6m):** 105 mode-3 GPS fixes located 720-840m from RTK ground truth appear in a 24-second window at a blackout boundary. Coast mode relaxes the chi-squared gate slightly to re-acquire GPS after the blackout; the adversarial cluster each individually pass the gate and collectively pull the estimate. RL-EKF incidentally rejects them through its miscalibrated gate (the same gate that causes its ten other losses). FusionCore now ships a physical-plausibility gate (`gnss.max_speed`) that rejects this cluster and cuts the peak spike. **Honesty caveat:** this does *not* fix the score. The sequence's ATE is dominated by dead-reckoning drift accumulated *during* the 211-second blackout, not by the cluster spike, so rejecting the cluster lowers the peak but not the overall number. The real lever, as with 2012-06-15, is an absolute heading source during the outage.
 
 ---
 
