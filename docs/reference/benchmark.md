@@ -21,6 +21,8 @@ FusionCore vs robot_localization EKF on the [NCLT dataset](http://robots.engin.u
 | 2013-02-23 | Winter | 78 min | 19,333 | 240s | **59.4 m** | 82.2 m | FC +28% |
 | 2013-04-05 | Spring | 68 min | 16,297 | 275s | **12.1 m** | 268.9 m | FC +96% |
 
+> **Note:** these numbers are a snapshot pending a controlled full-suite re-run on current `main`. The 10-of-12 result holds, but the 2013-04-05 figure (12.1 m) is stale: it has since regressed to ~19.4 m (still a 93% win). See `tools/benchmark_regression.md`.
+
 ATE = absolute trajectory error, SE3-aligned to RTK GPS ground truth. GPS Fixes = mode-3 (3D) fixes only, as published by nclt_player.
 
 RL-UKF: NaN divergence on all twelve sequences (known numerical instability under sim-time playback, confirmed by RL maintainer). Excluded from results.
@@ -159,7 +161,7 @@ RL-EKF wins here because its 2D mode has a simpler state vector and accumulates 
 **Path to fixing this:**
 
 - Reduce `coast_imu_wz_scale` from 500 to 50-100 for blackouts exceeding 200s. At 500x down-weighting, the IMU WZ is essentially ignored. Both sensors sharing heading responsibility reduces sensitivity to B_EWZ residual error.
-- Magnetometer integration closes the observability gap completely: an absolute heading reference during GPS absence makes B_GZ and B_EWZ irrelevant. This is the architecturally correct fix and is on the roadmap.
+- Magnetometer integration is available now (`magnetometer.enabled: true`): an absolute heading reference during a GPS outage bounds the heading drift instead of letting it accumulate, demonstrated in a unit test with slipping wheel odometry. Honest caveat: this cannot be validated against *this NCLT number*, the dataset publishes no usable magnetometer and its ground-truth orientation is too noisy to score a few-metre change. So it is validated by construction and in test, and awaits real-hardware confirmation; it is not proven to close this specific loss.
 - Duration-dependent `coast_q_factor`: the current fixed 10x multiplier was tuned for the majority of sequences. For blackouts > 300s, a nonlinear ramp may reduce heading drift without sacrificing re-acquisition on short blackouts.
 
 ### 2012-08-20 (FC 98.3m, RL 10.6m)
@@ -178,11 +180,11 @@ Per-minute error analysis:
 | 63-67 min | spike to ~788m, recovers in 2 min | Blackout 2 (211s): 105 adversarial fixes at boundary |
 | 68-82 min | 5-10 m | Full recovery, remaining 15 minutes on-par with RL |
 
-The 98m ATE RMSE is driven almost entirely by those two transients. RL-EKF wins because its tight Mahalanobis gate (calibrated to the stated 3m sigma, which causes GPS rejection on 10 other sequences) accidentally rejects these outliers too. See [issue #64](https://github.com/manankharwar/fusioncore/issues/64).
+The transient spikes are large, but the 98m ATE is not the cluster alone: even with the cluster rejected (see the plausibility gate below), the ATE stays high because of the dead-reckoning drift accumulated during the 211s blackout. RL-EKF wins because its tight Mahalanobis gate (calibrated to the stated 3m sigma, which causes GPS rejection on 10 other sequences) rejects these outliers too, and its 2D model drifts less through the blackout. See [issue #64](https://github.com/manankharwar/fusioncore/issues/64).
 
 **Path to fixing this:**
 
-- **Velocity sanity check:** A GPS fix 720m from the dead-reckoned position after a 211s blackout implies ~3400 m/s. A hard `max_implied_speed` check (e.g., 20 m/s) operating before the chi2 gate rejects this trivially and has zero effect on normal operation.
+- **Physical-plausibility gate (shipped):** A GPS fix 720m from the dead-reckoned position after a 211s blackout implies impossible motion. FusionCore ships `gnss.max_speed`, which rejects any fix farther from the prediction than `max_speed * gap + margin`; on this sequence it rejects the cluster and cuts the peak spike. Honest caveat: it does *not* fix the score, because the ATE is dominated by the dead-reckoning drift accumulated *during* the blackout, not by the cluster spike.
 - **Cluster consistency gate:** Five consecutive fixes all landing 720-840m from the predicted position with geometric consistency (tight cluster, not random scatter) is distinguishable from noise. A secondary check on cluster coherence catches this without affecting single-fix rejection behavior.
 - **Gate hysteresis on recovery:** Instead of a step change in chi2 threshold at re-acquisition, a linear ramp from relaxed back to nominal over the first N returned fixes makes it harder for a dense cluster to slip through entirely.
 

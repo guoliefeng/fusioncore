@@ -21,6 +21,8 @@ FusionCore vs robot_localization EKF on the [NCLT dataset](http://robots.engin.u
 | 2013-02-23 | Winter | 78 min | 19,333 | 240s | **59.4 m** | 82.2 m | FC +28% |
 | 2013-04-05 | Spring | 68 min | 16,297 | 275s | **12.1 m** | 268.9 m | FC +96% |
 
+> **Note:** these numbers are a snapshot pending a controlled full-suite re-run on current `main`. The 10-of-12 result holds, but the 2013-04-05 figure (12.1 m) is stale: it has since regressed to ~19.4 m (still a 93% win). See `tools/benchmark_regression.md`.
+
 ATE = absolute trajectory error, SE3-aligned to RTK GPS ground truth. GPS Fixes = mode-3 (3D) fixes only, as published by nclt_player.
 
 RL-UKF: NaN divergence on all sequences (known numerical instability under sim-time playback, confirmed by RL maintainer).

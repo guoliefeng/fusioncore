@@ -85,8 +85,11 @@ The core library (`fusioncore_core`) has zero ROS dependency. It can be used in 
 - In Gazebo simulation, residual y-axis drift (~0.3 m) can occur from Gazebo physics: not a filter error
 - Mecanum drive lateral velocity is not predicted by the motion model
 
+**Shipped since this list was written:**
+
+- Ackermann motion model (`motion_model: Ackermann`)
+- Auto-derive GNSS and IMU lever arms from TF (leave the `lever_arm_*` params at 0 and the wrapper resolves them from `base_frame` to the sensor frame on the first message)
+
 **Roadmap:**
 
-- Ackermann and omnidirectional steering motion models
-- Mecanum drive motion model
-- Auto-derive GNSS lever arm from TF header.frame_id
+- Mecanum / omnidirectional drive motion model (lateral velocity is currently handled via `encoder.nhc_vy_sigma`, not a dedicated model)

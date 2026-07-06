@@ -103,6 +103,8 @@ FusionCore vs robot_localization on the [NCLT dataset](http://robots.engin.umich
 | 2013-02-23 | Winter | 78 min | **59.4 m** | 82.2 m | FC +28% |
 | 2013-04-05 | Spring | 68 min | **12.1 m** | 268.9 m | FC +96% |
 
+> **Note:** these numbers are a snapshot pending a controlled full-suite re-run on current `main`. The 10/12 result holds, but the 2013-04-05 figure (12.1 m) is stale: it has since regressed to ~19.4 m (still a 93% win). See `tools/benchmark_regression.md`.
+
 RL-UKF diverges with NaN on all twelve sequences. FusionCore wins 10/12 sequences. RL-EKF's losses trace to a single root cause: the GPS driver reports 3m sigma, but measured against RTK ground truth, actual p95 noise is 9.7-53.1m depending on the day. RL's gate is calibrated to the stated 3m and rejects valid fixes on bad-GPS days. FusionCore's adaptive noise estimation (`adaptive.gnss: true`) keeps chi2 statistics calibrated in real time.
 
 The two FC losses are driven by a GPS data quality issue on 2012-08-20 (105 corrupt mode-3 fixes in a 24-second window at a blackout boundary) and accumulated heading error during a 462-second GPS blackout on 2012-06-15. See [benchmarks/README.md](benchmarks/README.md) for full per-sequence analysis including root causes and path-to-fix.

@@ -113,6 +113,8 @@ Evaluated against robot_localization EKF on the [NCLT dataset](http://robots.eng
 | 2013-02-23 | Winter | 78 min | **59.4 m** | 82.2 m | FC +28% |
 | 2013-04-05 | Spring | 68 min | **12.1 m** | 268.9 m | FC +96% |
 
+> **Note:** these numbers are a snapshot pending a controlled full-suite re-run on current `main`. The 10/12 result holds, but the 2013-04-05 figure (12.1 m) is stale: it has since regressed to ~19.4 m (still a 93% win). See `tools/benchmark_regression.md`.
+
 **10/12 FC wins.** RL-EKF's losses trace to a single root cause: NCLT's GPS driver reports 3m sigma, but measured against RTK ground truth, actual p95 noise ranges from 9.7m to 53.1m depending on the day. RL's Mahalanobis gate is calibrated to the stated 3m, so it rejects valid fixes on sequences with higher actual noise. FusionCore's adaptive noise estimation (`adaptive.gnss: true`) adjusts the noise model in real time and keeps chi2 statistics calibrated.
 
 The two FC losses (2012-06-15 and 2012-08-20) both have specific root causes: a 462-second GPS blackout causing heading drift, and an adversarial cluster of 105 corrupt GPS fixes at a blackout boundary. Full root-cause analysis and path-to-fix in the [benchmark reference](reference/benchmark.md).
