@@ -106,3 +106,10 @@ gazebo.md
 clients/
 outreach/
 fusioncore-100-deliverables-to-roscon.md
+
+# Local scratch working files: never commit
+scratchpad/
+
+# Benchmark run outputs (trajectories/plots): reproducible, large, machine-local.
+# The verified numbers live in tools/benchmark_baseline.json, which IS tracked.
+**/results_fast/
