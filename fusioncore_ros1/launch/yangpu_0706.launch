@@ -1,0 +1,11 @@
+<launch>
+  <arg name="config" default="$(find fusioncore_ros1)/config/yangpu_0706.yaml" />
+  <arg name="use_sim_time" default="true" />
+
+  <param name="/use_sim_time" value="$(arg use_sim_time)" />
+
+  <node pkg="fusioncore_ros1" type="fusioncore_node" name="fusioncore" output="screen">
+    <rosparam command="load" file="$(arg config)" />
+    <remap from="/gnss/fix" to="/ins_driver/gps" />
+  </node>
+</launch>

@@ -1,0 +1,125 @@
+base_frame: base_link
+odom_frame: odom
+publish_rate: 100.0
+
+publish:
+  force_2d: true
+  tf: true
+
+imu:
+  topic: /ins_driver/imu
+  frame_id: chcnav_msg_parser
+  has_magnetometer: false
+  gyro_noise: 0.005
+  accel_noise: 0.15
+  remove_gravitational_acceleration: false
+  accel_scale: 9.80665
+  axis_remap:
+    enabled: true
+    # Incoming IMU axes: +Y is vehicle forward. Assume +X is vehicle right, +Z up.
+    # base_link = [forward, left, up] = [imu_y, -imu_x, imu_z].
+    matrix: [0.0, 1.0, 0.0,
+             -1.0, 0.0, 0.0,
+              0.0, 0.0, 1.0]
+
+encoder:
+  topic: /wheel_odom
+  vel_noise: 0.08
+  yaw_noise: 0.03
+  use_msg_covariance: false
+  reject_pose_reset: true
+  pose_reset_threshold: 5.0
+  pose_reset_drop_s: 0.25
+  nhc_vy_sigma: 0.05
+  nhc_auto_detect: false
+
+encoder2:
+  topic: ""
+
+gnss:
+  base_noise_xy: 0.8
+  base_noise_z: 2.0
+  max_hdop: 4.0
+  min_satellites: 4
+  min_fix_type: 1
+  use_gps_fix: false
+  auto_resolve_lever_arm: false
+  track_heading_enabled: true
+  track_heading_min_dist: 5.0
+  track_heading_max_sigma: 0.4
+  track_heading_min_speed: 0.2
+  track_heading_max_yaw_rate: 0.3
+  coast_n: 5
+  coast_timeout_s: 30.0
+  coast_q_factor: 20.0
+  coast_q_bias_factor: 100.0
+  velocity_topic: ""
+  heading_topic: ""
+  fix2_topic: ""
+  azimuth_topic: ""
+
+input:
+  gnss_crs: EPSG:4326
+
+output:
+  crs: EPSG:4978
+  convert_to_enu_at_reference: true
+
+reference:
+  use_first_fix: false
+  latitude: 19.718214740
+  longitude: 109.170350210
+  altitude: -8.8
+
+outlier_rejection: true
+outlier_threshold_gnss: 16.27
+outlier_threshold_imu: 15.09
+outlier_threshold_enc: 11.34
+outlier_threshold_hdg: 10.83
+outlier_threshold_vslam: 22.46
+
+adaptive:
+  imu: true
+  encoder: true
+  gnss: true
+  ground_constraint: true
+  window: 50
+  alpha: 0.01
+
+ground_constraint:
+  vz_sigma: 0.1
+  az_sigma: 0.5
+  z_position_sigma: 0.3
+
+zupt:
+  enabled: true
+  velocity_threshold: 0.05
+  angular_threshold: 0.05
+  noise_sigma: 0.01
+
+init:
+  stationary_window: 0.0
+  position_sigma: 500.0
+  wait_for_all_sensors: false
+  sensor_wait_timeout: 5.0
+
+motion_model: ConstantVelocityAcceleration
+
+ukf:
+  q_position: 0.01
+  q_orientation: 1.0e-9
+  q_velocity: 0.1
+  q_angular_vel: 0.1
+  q_acceleration: 1.0
+  q_gyro_bias: 1.0e-5
+  q_accel_bias: 1.0e-5
+  q_encoder_wz_bias: 1.0e-7
+
+magnetometer:
+  enabled: false
+
+vslam:
+  topic: ""
+
+radar:
+  velocity_topic: ""

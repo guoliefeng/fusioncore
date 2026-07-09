@@ -1,0 +1,96 @@
+# Hardware config: VSLAM + IMU (indoor, GPS-denied)
+#
+# Target platform: any ground robot or aerial platform using visual SLAM
+# for localization. No GPS, no wheel encoders required.
+#
+# Confirmed setup (issue #46):
+#   VSLAM:  ORB-SLAM3 stereo-only mode
+#   IMU:    VectorNav (9-axis)
+#   Frame:  indoor, GPS-denied
+#
+# Launch:
+#   ros2 launch fusioncore_ros fusioncore.launch.py \
+#     fusioncore_config:=$(ros2 pkg prefix fusioncore_ros)/share/fusioncore_ros/config/vslam_imu.yaml
+#
+# Set vslam.topic to wherever your VSLAM publishes nav_msgs/Odometry.
+# The covariance field must be filled; see docs/hardware/vslam-imu.md.
+
+fusioncore:
+  ros__parameters:
+    base_frame: base_link
+    odom_frame: odom
+    publish_rate: 100.0
+    publish.force_2d: true        # set false for aerial platforms
+    publish.tf: true
+
+    # ── IMU: VectorNav (9-axis) ───────────────────────────────────────────────
+    # VectorNav publishes full orientation (yaw from magnetometer).
+    # Set has_magnetometer: true to validate heading from IMU orientation.
+    imu.has_magnetometer: true    # VectorNav, Xsens, BNO08x: true
+                                  # plain 6-axis IMU (MPU-6050 etc.): false
+    imu.gyro_noise: 0.005         # rad/s: typical 9-axis MEMS
+    imu.accel_noise: 0.1          # m/s²
+    imu.remove_gravitational_acceleration: false
+    imu.frame_id: ""
+
+    # ── VSLAM (ORB-SLAM3, RTAB-Map, Kimera, etc.) ────────────────────────────
+    # Set to the topic where your VSLAM publishes nav_msgs/Odometry.
+    # Twist is ignored; only pose.pose and pose.covariance are used.
+    vslam.topic: "/vslam/odometry"
+    vslam.position_noise: 0.1     # m: fallback when message carries no covariance
+    vslam.orientation_noise: 0.02 # rad: fallback when message carries no covariance
+    vslam.reinit_n: 10            # consecutive gate rejections before re-anchoring map origin
+    # After vslam.reinit_n consecutive chi-squared rejections, FusionCore assumes
+    # the VSLAM system reinitialised to a new map and re-anchors the map-to-odom
+    # offset to the filter's current position. Increase if normal motion produces
+    # short bursts of rejections; decrease if you want faster recovery.
+
+    # ── No GPS, no wheel encoders ─────────────────────────────────────────────
+    # FusionCore runs on IMU + VSLAM alone. No GPS topics needed.
+    # Set reference.use_first_fix: false so the filter starts at origin.
+
+    # ── Outlier rejection ─────────────────────────────────────────────────────
+    outlier_rejection: true
+    outlier_threshold_imu:   15.09   # applied to all IMU paths (raw 6D, orientation 2D/3D)
+    outlier_threshold_enc:   11.34   # chi2(3, 0.99): not used without encoders
+    outlier_threshold_gnss:  16.27   # chi2(3, 0.999): not used without GPS
+    outlier_threshold_hdg:   10.83   # chi2(1, 0.999): 1D heading
+    outlier_threshold_vslam: 22.46   # chi2(6, 0.999): 6D VSLAM pose
+    # Keep vslam gate at chi2(6, 0.999). ORB-SLAM3 can jump on reinitialization:
+    # this gate rejects those jumps automatically when covariance is calibrated.
+
+    # ── Adaptive noise ────────────────────────────────────────────────────────
+    adaptive.imu: true
+    adaptive.encoder: false
+    adaptive.gnss: false
+    adaptive.window: 50
+    adaptive.alpha: 0.01
+
+    # ── UKF process noise ─────────────────────────────────────────────────────
+    ukf.q_position: 0.01
+    ukf.q_orientation: 1.0e-9
+    ukf.q_velocity: 0.1
+    ukf.q_angular_vel: 0.1
+    ukf.q_acceleration: 1.0
+    ukf.q_gyro_bias: 1.0e-5
+    ukf.q_accel_bias: 1.0e-5
+    ukf.q_encoder_wz_bias: 1.0e-7
+
+    # ── Startup ───────────────────────────────────────────────────────────────
+    init.stationary_window: 2.0     # collect 2s of IMU at rest for bias init
+    init.wait_for_all_sensors: true
+    init.sensor_wait_timeout: 10.0
+
+    # ── Motion model ──────────────────────────────────────────────────────────
+    motion_model: "ConstantVelocityAcceleration"
+    # Use DifferentialDrive for diff-drive ground robots:
+    # motion_model: "DifferentialDrive"
+
+    # ── No GPS ────────────────────────────────────────────────────────────────
+    reference.use_first_fix: false  # no GPS: filter starts at origin
+    reference.x: 0.0
+    reference.y: 0.0
+    reference.z: 0.0
+    input.gnss_crs: "EPSG:4326"
+    output.crs: "EPSG:4978"
+    output.convert_to_enu_at_reference: true
